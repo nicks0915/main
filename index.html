@@ -3303,16 +3303,17 @@ SODP-10800,VoG CEUAT Prod Order confirmation email missing installation details,
             }
         }
 
-        // Normalize raw JIRA severity values to a canonical set regardless of
-        // casing or whitespace differences between SODP and GREEN issue types.
         function normalizeSeverity(val) {
             if (!val || typeof val !== 'string') return 'Unassigned';
-            const v = val.trim().toLowerCase();
-            if (v === 'critical') return 'Critical';
-            if (v === 'high')     return 'High';
-            if (v === 'medium')   return 'Medium';
-            if (v === 'low')      return 'Low';
-            return val.trim() || 'Unassigned';
+            // Strip invisible Unicode chars (zero-width space, BOM, soft-hyphen, etc.) that JIRA embeds
+            const cleaned = val.replace(/[\u0000-\u001f\u007f\u00ad\u200b-\u200f\u2028-\u202f\ufeff]/g, '').trim();
+            if (!cleaned) return 'Unassigned';
+            const v = cleaned.toLowerCase();
+            if (v === 'critical' || v.includes('critical')) return 'Critical';
+            if (v === 'high'     || v.includes('high'))     return 'High';
+            if (v === 'medium'   || v.includes('medium'))   return 'Medium';
+            if (v === 'low'      || v.includes('low'))      return 'Low';
+            return cleaned || 'Unassigned';
         }
 
         function processData(data) {
@@ -4858,7 +4859,7 @@ function clearSearch() {
         // Schema version — bump this whenever the CSV column structure changes.
         // Any cached data saved with an older schema version will be auto-discarded
         // so the user is prompted to refresh from JIRA with the new columns.
-        const JIRA_DATA_SCHEMA_VERSION = 3; // v3: removed Severity of Defect column, added Environment column (issue-type-routed)
+        const JIRA_DATA_SCHEMA_VERSION = 4; // v4: normalizeSeverity strips invisible Unicode chars for correct metric counts
 
         function loadPersistedData() {
             try {
