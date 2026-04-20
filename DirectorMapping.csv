@@ -1,0 +1,132 @@
+Jira & Application Mapping,,,,,,,,,
+Engineering Director,Engineering Manager,Team,System,Application,Product Owner,CIO Digital Product,Jira Issue Key,Migrated?,Priority
+Nicole Tytaneck,Puja Chadha,NC Cloud,SoR,CloudBSS,Vincent Deslauriers ,Offer & Catalog Management,NCBSS,Yes,1
+Natasha Lander,Mandi Romanski,FUSE,SoE,Service Address Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,VOGS,Yes,1
+Natasha Lander,Mandi Romanski,FUSE,SoE,Appointment Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,VOGS,Yes,1
+Natasha Lander,Mandi Romanski,FUSE,SoE,Cross Sell MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,VOGS,Yes,1
+Natasha Lander,Rajavi Panchal,FUSE,SoE,Commerce Shell,"Vinod, Satish, Ranji",Buy & Checkout Experience,VOGS,Yes,1
+Natasha Lander,Rajavi Panchal,FUSE,SoE,Commerce Session API,"Vinod, Satish, Ranji",Buy & Checkout Experience,BYOD,Yes,1
+Natasha Lander,Rajavi Panchal,FUSE,SoE,Auth Status API,"Vinod, Satish, Ranji",Buy & Checkout Experience,"BYOD, VOGS, ATCC",Yes,1
+Neal McGann,Pratik Panchal,Checkout,SoE,Checkout Shell,"Vinod, Satish, Ranji",Buy & Checkout Experience,GXY,Yes,1
+Natasha Lander,Mariana Pires,FUSE,SoE,Hardware Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,ATM,Yes,1
+Natasha Lander,Mariana Pires,FUSE,SoE,Send Quote MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,ATM,Yes,1
+Vatsal Bhatt,Abigail Kreger,My TELUS,SoE,Manage Shell,Liy Miao,Customer Care Experience,ATM,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Add On Selection MFE (V2),"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Natasha Lander,Mariana Pires,FUSE,SoE,Hardware Shell,"Vinod, Satish, Ranji",Buy & Checkout Experience,ATCC,Yes,1
+Vatsal Bhatt,,My TELUS,SoE,Cancel / Renew MFE,Lily Miao,Customer Care Experience,ATM,Yes,1
+Neal McGann,Pratik Panchal,,SoE,Cross Sell MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,GXY,Yes,1
+Natasha Lander,Mariana Pires,FUSE,SoE,Manage Licenses MFE,"Vinod, Satish, Ranji",Customer Care Experience,ATM,Yes,1
+Natasha Lander,Mariana Pires,FUSE,SoE,Hardware Return MFE,"Vinod, Satish, Ranji",Customer Care Experience,ATM,Yes,1
+Neal McGann,Pratik Panchal,Checkout,SoE,Payment MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,GXY,Yes,1
+Neal McGann,Pratik Panchal,,SoE,Send Communication MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Natasha Lander,Mandi Romanski,FUSE,SoE,Product Subscription Overview (PSO) MFE,Kiruthiga Sinnarajah,Customer Care Experience,VOGS,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Pro Install MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Credit Assessment MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Product Type Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Andre Medeiros,Adam Fernandes,,SoE,Promotion Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CSEG,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Device Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Phone Number Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Subscriber Information MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Sales Summary MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Order Summary MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Andre Medeiros,Adam Fernandes,Channel Sales Experience,SoE,Rate Plan Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CSEG,Yes,1
+Andre Medeiros,Adam Fernandes,Channel Sales Experience,SoE,Port-In MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CSEG,Yes,1
+Andre Medeiros,Adam Fernandes,Channel Sales Experience,SoE,Add On Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CSEG,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Device Selection (Sim) MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Coupon Code MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Package Selection MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Create Account MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Diana Ewing,C3X,SoE,Create Customer MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Pratik Panchal,,SoE,Order Status MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,GXY,Yes,1
+Neal McGann,Pratik Panchal,,SoE,Digital Signature MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,CUXMFE,Yes,1
+Neal McGann,Pratik Panchal,Galaxy,SoE,Universal MFE + Shell (UOST),"Vinod, Satish, Ranji",Buy & Checkout Experience,GXY,Yes,1
+Nelson Gillette,Brent Simon,,SoR,TMF-645 (Service Qual API),Daniel Sherrard,Offer & Service Qualification,SQA,Yes,3
+Nelson Gillette,Faisal Vishram,Spatial Net,SoR,Spatial Net,Daniel Sherrard,Location Services ,SNET,Yes,3
+Harbinder Mann,Benjamin Sheng,Mediation,SoR,CAMP,Ljiljana Popeskov,Revenue & Usage Management,TRAN,No Migration Needed.,2
+Harbinder Mann,Benjamin Sheng,Mediation,SoR,CMF,Ljiljana Popeskov,Revenue & Usage Management,TRAN,Migration from Sheets (To be done as needed),2
+Harbinder Mann,Benjamin Sheng,Mediation,SoR,OutCollect,Ljiljana Popeskov,Revenue & Usage Management,TRAN,Migration from Sheets (To be done as needed),2
+Harbinder Mann,Benjamin Sheng,Mediation,SoR,,Ljiljana Popeskov,Partner Settlement (Roaming) ,TRAN,Migration from Sheets (To be done as needed),2
+Nicole Tytaneck,Puja Chadha,NC Cloud,SoR,CloudBSS,Vincent Deslauriers,Offer & Catalog Management,OF,,2
+Vatsal Bhatt,Jean-Francois Cote,My TELUS,SoE,customer-api,,Customer Care Experience,,,2
+Dinesh M,,Analytics Implementation,SoE,NBA MFE,,Next Best Experience,,,2
+Andre Medeiros,Theresa Woo,C30C,SoR,Product Qualification,Rafael Lopez,,C3,,
+Andre Medeiros,Theresa Woo,Offer Management,SoR,EOM,Vincent Deslauriers ,Offer & Catalog Management,EOM,,2
+Jim Bremner,,,SoE,Authentication MFE,"Vinod, Satish, Ranji",Buy & Checkout Experience,,,2
+Nicole Tytaneck,Keith Murray,GEM,SoR,GEM,,,,,2
+Harbinder Mann,,Enterprise Architechture,SoR,,,,MP,,2
+Harbinder Mann,,Enterprise Architechture,SoR,,Liyan Al Hamlawi,Rating & Charging,CCSRC,,2
+Alyssa Borges,Rob Walker,Experience Design,,Experience Design,,,PXD,,2
+,,,,TMF-620,,,,,2
+,,,,TMF-648,,,,,2
+,Milena Krutiy,IFRS,SoR,IFRS,,Compensation,IFRS,,2
+Andre Medeiros,Tanya Lu/ Julia Ma,National Compensation,SoR,NCCS,,Compensation,NCCS,,2
+Andre Medeiros,Theresa Woo,C30C,SoR,C30C,,Customer Communications,C3,,2
+Andre Medeiros,Theresa Woo,C30C,SoR,Product Qualification,,,C3,,2
+Andrew Ah Yong,,,SoR,EPC,,,,,2
+,Faisal Vishram,,SoR,AMS,,Offer & Service Qualification,AMS,,2
+Nelson Gillette,"Ryan Chan, Francis Rancho",TV Activation (OPUS),SoR,AES,,,AESTVA1,,2
+Alex Itelman,,,SoR,SSNS,,Customer Care Experience,,,2
+Jerome Berube,,,SoR,PaaS,,Bespoke Solutions,OFNT,,2
+Jerome Berube,,,SoR,SWORM,,Field Workforce Management,TREE,,2
+Vatsal Bhatt,,Dope Jackalopes,SoE,My TELUS Billing UI,Saruji Perambalam,Customer Care Experience,DJR,,2
+Vatsal Bhatt,,Dope Jackalopes,SoE,My TELUS Payments UI,Dan Lam,Customer Care Experience,DJR,,2
+Vatsal Bhatt,,Neo Titans,SoE,My TELUS Appointments UI,Cristian Quiquinta,Customer Care Experience,HOMERUN,,
+Vatsal Bhatt,Maibel Rafferty,Neo Titans,SoE,My TELUS Purple Manage Apps,Cristian Quiquinta,Customer Care Experience,HOMERUN,,2
+Vatsal Bhatt,Maibel Rafferty,Huffle Puffins,SoE,My TELUS Overview UI,Michele Chee,Customer Care Experience,HFPF,,2
+Vatsal Bhatt,Maibel Rafferty,Cool Beans,SoE,overview-api,Cristian Quiquinta,Customer Care Experience,BEAN,,2
+Vatsal Bhatt,Jean-Francois Cote,My TELUS Navigation,SoE,My TELUS Navigation,,Customer Care Experience,GLOB,,2
+Vatsal Bhatt,Jean-Francois Cote,My T App,SoE,My TELUS App (Expo - Front end),,Customer Care Experience,SMS,,2
+Vatsal Bhatt,Jean-Francois Cote,My T App,SoE,My TELUS App (BFF),Kiruthiga Sinnarajah,Customer Care Experience,BFF2,,2
+Vatsal Bhatt,Abigail Kreger,,SoE,My TELUS Plans & Devices,David Habiniski,Customer Care Experience,SSUP,,2
+Vatsal Bhatt,Maibel Rafferty,Cool Beans,SoE,My TELUS B2B WLN,Cristian Quiquinta,Customer Care Experience,BEAN,,2
+Vatsal Bhatt,Abigail Kreger,Fast & Furious,SoE,My TELUS B2B WLS,Jennifer Marriot,Customer Care Experience,FAST,,2
+Jerome Berube,Julia Cassells,,SoE,TechHub,Cody Tucker,Field Workforce Management,THPRD,,2
+Nelson Gillette,Rob Carretero,,SoR,WFM,Cody Tucker,Field Workforce Management,FWFM,,2
+,,,SoR,Subscriber DB,,,GitHub Projects,,2
+,,,SoR,TMF-648,,,,,2
+,,,SoR,Contact Engine,,Customer Communications,,,2
+Andrew Ah Yong,Edward Chan,CES,SoR,CES,,,BILLING,,2
+,,,SoR,Enterprise Communication Platform (ECP),Syed Rizvi,Customer Communications,ECOMM,,2
+Andre Medeiros,Shawn Oh,Channel Dashboard,SoE,Channel Dashboard,Asad Amir,Channel Partner Management,CUS,,2
+,,,SoR,SubMgmt,,,,,2
+N/A,N/A,,SoE,Experience Design,N/A,N/A,PXD,,2
+Nicole Tytaneck,Joanne Kerr ( Fred Wang's Team),Enterprise TMF APIs,SoR,Bundle Qualification API,,,MERAPI,,2
+,,,SoR,Market Resolver,,,,,2
+Andrew Ah Yong,,,SoR,EPC?????,,,,,
+Nelson Gillette,Rob Carretero,,SoR,WFM Sales Force Scheduler,Cody Tucker,Field Workforce Management,WFMSFS ,,
+Natasha Lander,,,SoE,Purple Shop & Buy,,Buy & Checkout Experience,DINO,,
+Neal McGann,Michael Xia Jiang,,SoE,UDE Checkout (purple /yellow),,Buy & Checkout Experience,PNDA,,
+Matt Powell,,,SoE,Casa Partner,Olga Blushtein,Contact Centre Solutions,CCEP,,3
+Matt Powell,,,SoE,Casa TBS,Olga Blushtein,Contact Centre Solutions,GLAD,,3
+Matt Powell,Nandhakumar R,CASA,SoE,Casa CE,Olga Blushtein,Contact Centre Solutions,BEES,,3
+Matt Powell,Nandhakumar R,CASA,SoE,Casa CE,Olga Blushtein,Contact Centre Solutions,TECH,,3
+Matt Powell,Nandhakumar R,CASA,SoE,Casa CE,Olga Blushtein,Contact Centre Solutions,SMRPN,,3
+Matt Powell,Nandhakumar R,CASA,SoE,Casa CE,Olga Blushtein,Contact Centre Solutions,SVN,,3
+Andrew Ah Yong,Edward Chan,Billing Team,SoR,CES,Pankaj Suri,Digital Billing Experience,CES,,
+Andrew Ah Yong,Edward Chan,Billing Team,SoR,Subscription Management,Pankaj Suri,Billing Subscriber Account Management,SM ,,
+Andrew Ah Yong,Steve Rhodes,DBE Platforms,SoR/SoE,Knowbility Decommission,Pankaj Suri,Digital Billing Experience,KD,,
+Andrew Ah Yong,Steve Rhodes,DBE Platforms,SoR/SoE,Knowbility to GCP,Pankaj Suri,Digital Billing Experience,KB2GCP,,
+Andrew Ah Yong,Kim Taylor,Bill Genetix,SoE,Bill Presentment & Analytics,Pankaj Suri,Bill Presentment & Analytics,BLGNXT,,
+Andrew Ah Yong,Edward Chan,Billing Team,SoR/SoE,Billing API,Pankaj Suri,Digital Billing Experience,BILLING,,
+Andrew Ah Yong,Edward Chan,Billing Team,SoR/SoE,Enterprise Account Management APIs,Pankaj Suri,Digital Billing Experience,ENTACCTAPI,,
+Andrew Ah Yong,Amira Obradovic,"Calculations, Accounts Receivables, Payments and Settlements",SoR/SoE,Kenan,Pankaj Suri,Digital Billing Experience,CKPCRD,,
+Harbinder Mann,Bala Chandar,EPS - Enterprise Payment Systems,SoR/SoE,EPS - Enterprise Payment Systems,Henry Lai Kalyan Naraharisetti Bala Anantha,Payment Experience,EPSB,,
+,Kim Taylor,Bill Presentment ,SoE,Bill Presentment & Analytics,,,BLGNXT,Need Migration ,
+,Faisal Vishram,Facilities and Resource Management,SoE/SoR,"Phone Number Inventory, Knowbility, Work order Batch Triggers",,Billing Account Management ,FARM,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,84,,,,,
+,,,,97,,,,,
+,,,,39,,,,,
+,,,,40,,,,,
+,,,,72,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+John Wick,,DC Comics,SoE,Wonder Women,Batman,Buy & Checkout Experience,GSS,Yes,Testing only
+James Bond,,Marvel,SoE,Black Widow,Robin,Buy & Checkout Experience,GSST,Yes,Testing only

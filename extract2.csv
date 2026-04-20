@@ -1,0 +1,309 @@
+Issue Type,Issue key,Issue id,Summary,Priority,Custom field (Severity SODP),Custom field (Severity of Defect),Labels,Labels,Labels,Description,Due date,Custom field (Application ),Custom field (Application Name (Bug)),Custom field (Environments (migrated)),Custom field (Environment)
+Bug,SODP-14131,1138258,"[ITNO1_VOG_OptikTV] Incident is created with error ""Order Command can not be processed due to Related order id is empty""",Critical,🔴 Critical,,EOG_E2E_GTM,NC_OptikTV,TTA_OptikTV,"*Pre-conditions:*
+
+* Active Offnet Internet (Internet + Commitment)
+
+||*Test Steps*||*Validation*||
+|# Create a Quote with Optik TV + TCS-ENT-PCO-2YR commitment offer (on the same Location & Customer that has active Internet)
+# Patch appointment date with the value current date + 1 and additional characteristics
+# Submit the order|# Quote is generated without any alerts. All the default SLOs must be present in the Quote.
+# Appointment is added to the quote correctly.
+# Quote should be submitted without errors. Order is processed successfully in OM.|
+
+{color:#36b37e} {color}{color:#36b37e}*ER:*{color}{color:#36b37e} Order is processed successfully in OM.{color}
+
+{color:#ff5630}*AR:*{color}{color:#ff5630} Incident is created during order processing wit{color}{color:#bf2600}h message “Order Command can not be processed due to Related order id is empty”{color}
+
+ 
+
+ECID: 734138284
+Quote: ac876a2b-9c58-4d88-9552-1ac97b89ecbc
+
+OM link: [https://om-frontend-app-ui-cloud-bss-itn01.nc-gke-st.tsl.telus.com/order/2974f1b8-8717-4c74-921e-4a9ba9bcb8a9/order-items/18ff9bae-bee0-4d94-bcae-dbe8d1f8f9e8|https://om-frontend-app-ui-cloud-bss-itn01.nc-gke-st.tsl.telus.com/order/2974f1b8-8717-4c74-921e-4a9ba9bcb8a9/order-items/18ff9bae-bee0-4d94-bcae-dbe8d1f8f9e8]
+
+
+
+!image-20260416-140751.png|width=684,alt=""image-20260416-140751.png""!",,,,ITN01,
+Bug,SODP-14103,1136629,[ITNO1_VOG_OptikTV] Unable to add appointment details as work order is not found in the quote during Optik TV & VOG Provide,Critical,🔴 Critical,,EOG_E2E_GTM,TTA_OptikTV,,"[ITNO1_VOG_OptikTV] Unable to add appointment details as work order is not found in the quote during Optik TV Provide
+
+
+
+*Steps to reproduce :*
+
+# Create a customer and provide 1.5G with commitment
+# Complete the order from OM
+# Create a cart for Optik TV with below content packs and ala-carte channels:
+a) TCS-ENT-PRS-BASIC
+b) ENT-ADD-CP-BLOCKBUSTERS
+c) ENT-ADD-CP-LIFESTYLE&BEYOND
+d) ENT-ADD-ALC-AAJTAK
+# Try to add appointment details
+
+Expected Result: Should be able to add the appointment
+
+Current Result: Unable to find work order item in the quote.
+
+Customer Details:
+
+*Full Name* :TTAFCCBPMOuyTSKx RBTTAgleWkSVv
+*Email*: [TTAFCCBPMOuyTSKx@telus.com|mailto:TTAFCCBPMOuyTSKx@telus.com]
+*Billing Account Number* : 300307791
+*ECID* : 734129889
+*Quote Id* : 024fa216-ae10-46bb-91db-afb691b3dd75
+*Address ID* : 1562474",,,,ITN01,
+Bug,SODP-14102,1136573,"[PR01 Sanity] Optik TV - ""Send Service Order to TMF-641"" task is getting failed on OM for Optik TV order",Critical,🔴 Critical,,EOG_E2E_GTM,NC_OptikTV,,"*Env - PR01*
+
+*Details -* 
+ECID - 120058208
+Quote ID - 051bee50-da33-4d7f-bc9f-a71c12c9a9fa
+[https://om-frontend-app-ui-cloud-bss-pr01.nc-gke-pr.tsl.telus.com/order/2ec0ffa8-8e80-4a6d-ac52-1c4b8af7aa06/orchestration?flowType=orchestration&taskId=74f7dbc2-93b4-4f3d-a8e6-50bdb0a49b72|https://om-frontend-app-ui-cloud-bss-pr01.nc-gke-pr.tsl.telus.com/order/2ec0ffa8-8e80-4a6d-ac52-1c4b8af7aa06/orchestration?flowType=orchestration&taskId=74f7dbc2-93b4-4f3d-a8e6-50bdb0a49b72]
+
+
+
+
+
++*Error*+
+
+om-cip-som-integration
+Error Details
+code: 0reason: ""IPTV Service Order Management failed
+
+""message: ""Downstream Error - ERROR""
+
+
+*Test steps -* 
+1. Create quote with Optik TV
+2. Submit quote 
+3. Check OM
+
+{color:#36b37e}*ER - ""Send Service Order to TMF-641"" task should be completed*{color}
+
+{color:#ff5630}*AR - ""Send Service Order to TMF-641"" task is getting failed on OM for Optik TV order*{color}",,NC Vendor,,Production,
+Bug,SODP-14065,1127917,[ITNO1_VOG_OptikTV] Disconnect only internet for customer with Active Optik TV +Offnet Internet Services is allowed,Critical,🔴 Critical,,EOG_E2E_GTM,NC_OptikTV,TTA_OptikTV,"*Env - ITN01*
+
+*Precondition -* 
+Active customer with VOG Internet + Commitment
+
+*Steps to reproduce :*
+
+# Create quote with Optik TV with Commitment
+# Patch Work Order chars & Appointment
+# Submit Order
+# Initiate disconnect of only Internet
+
+ 
+
+{color:#006644}*ER: Quote response should throw Alert for only disconnect of Internet “*{color}Optik TV Essentials cannot exist without Internet{color:#006644}*“*{color}
+
+{color:#ff5630}*AR: No alert in Quote while disconnect only Internet for customer with Active Optik TV +Offnet Internet Services*{color}
+
+
+!image-20260409-085608.png|width=812,alt=""image-20260409-085608.png""!
+
+*Details -* 
+LPDS - 2002632 
+ECID - 734134956 
+VOG quote id - 97920f40-78af-4c85-9c77-f24f0183e640
+Optik quote id - d09d5841-72e6-48d4-83b5-29586f6b2514
+Disconnect quote id - 599b338d-64ff-4cbc-a49f-b791487abc96",17/Apr/26 12:00 AM,,,Production,
+Bug,SODP-14061,1127601,"[ITNO1_VOG_OptikTV] ""Send Service Order for TMF-641"" is failing with error "" IPTV Service Order Management failed""",Critical,🔴 Critical,,EOG_E2E_GTM,NC_OptikTV,TTA_OptikTV,"*Pre-conditions:*
+
+* Active Offnet Internet (Internet + Commitment)
+
+||*Test Steps*||*Validation*||
+|# Create a Quote with Optik TV + TCS-ENT-PCO-2YR commitment offer (on the same Location & Customer that has active Internet)
+# Patch appointment date with the value current date + 1 and additional characteristics
+# Submit the order|# Quote is generated without any alerts. All the default SLOs must be present in the Quote.
+# Appointment is added to the quote correctly.
+# Quote should be submitted without errors. Order is processed successfully in OM.|
+
+{color:#36b37e} {color}{color:#36b37e}*ER:*{color}{color:#36b37e} Order is processed successfully in OM.{color}
+
+{color:#ff5630}*AR:*{color}{color:#ff5630} ""Send Service Order for TMF-641"" is failing with error "" IPTV Service Order Management failed""{color}
+
+ 
+
+ECID: 734134726
+
+Optik TV quote: 44789bf1-6db2-46a0-925e-f1ce0ed06189
+
+OM link: [https://om-frontend-app-ui-cloud-bss-itn01.nc-gke-st.tsl.telus.com/order/fcc802ff-340c-4073-9244-abcb1a28e0ca/details|https://om-frontend-app-ui-cloud-bss-itn01.nc-gke-st.tsl.telus.com/order/fcc802ff-340c-4073-9244-abcb1a28e0ca/details]
+
+CIP session: [https://cloud-integration-platform-ui-cloud-bss-itn01.nc-gke-st.tsl.telus.com/chains/889645f7-8756-468e-a830-50fffb43292d/sessions/d3e3557b-07ee-4234-9eb8-46c34ed9eb98|https://cloud-integration-platform-ui-cloud-bss-itn01.nc-gke-st.tsl.telus.com/chains/889645f7-8756-468e-a830-50fffb43292d/sessions/d3e3557b-07ee-4234-9eb8-46c34ed9eb98]
+
+
+
+{noformat}{
+  ""code"": ""0"",
+  ""reason"": ""IPTV Service Order Management failed"",
+  ""message"": ""Downstream Error - ERROR""
+}{noformat}",16/Apr/26 12:00 AM,,,ITN01,
+Bug,SODP-13928,1106079,[ITN01] POQ for Optik TV Essentials is Unqualified,Critical,🔴 Critical,,EOG_E2E_GTM,NC_OptikTV,TTA_OptikTV,"*Pre-conditions:*
+TMF 679 - POQ
+Internet should be qualified on customer location
+
+|*Test Steps*|*Validation*|
+|# Include in the TMF679 request:
+* Address from pre-requisite
+* Market: Ontario/Quebec
+* Product Offering: TLO + Core Essentials
+* Tag '[MR]_[TV Product Markets]_[Telus Optik TV]'
+2. Submit the request|# TV TLO + Core Essentails  for the customer at the location should be qualified.|
+
+ 
+
+ER : Optik TV Essentials Should be qualified 
+
+AR : Optik TV Essentials is getting unqualified with below error
+
+{noformat}""label"": ""Item productSpecification is not allowed due to availability check result for the given address 1562253"" {noformat}
+
+Environment : ITN01
+
+Address : 1562253
+
+ECID : 734080015
+
+Request : [^Request.txt] 
+
+Response : [^Response.txt] ",23/Mar/26 12:00 AM,NC Vendor,,ITN01,
+Bug,SODP-14099,1135283,MyTelus Overview API is not returning the Optik 5.0,High,🟠 High,,EOG_E2E_GTM,,,"Unable to see Optik TV details on the Overview page. 
+*Steps*: 
+
+# login to MyT Production [Telus.com/mytelus|http://Telus.com/mytelus]
+# Use the following creds:  [vulcantest0310_noaddon@telustesting.com|mailto:vulcantest0310_noaddon@telustesting.com] / Passw0rd123
+
+ From [~accountid:60d4d00600bdd90068b74b01] 
+So to clarify further: {{/product/fifaProductInventoryManagement/v2/product}} is returning the product, but {{/customer/customerinfo/v2/summaries?wirelinecustomerlist}} is not. Hence why it's not included as a product in the resulting overview-api response.
+
+Actual result: 
+
+!image-20260416-183317.png|width=730,alt=""image-20260416-183317.png""!",,MyTELUS,,Production,
+Experience Defect,GREEN-627,1111336,Creating an Entertainment quote with STB does not automatically add Pro-Install to the quote,High,,🟠 High,EOG_E2E_GTM,,,"Based on this conversation in gchat, I am expecting that when I build a quote with Entertainment plan {{2aa83ce6-bc80-421c-a327-1634f4e217e0}} and Set Top Box {{41a7d4a3-3be3-4995-b616-af3da2f68626}} that Pro Install {{c08a7445-f012-48e2-83e5-357818e5d19d}} will automatically be added to the quote. This is not happening in itn01 with the following payload to the TMF Quote api. 
+
+I also tried with no {{transaction-family}} extended parameters or {{target}} values and got the same behaviour. Please let us know if we should be using different {{transaction-family}} extended parameters or {{target}}. 
+
+{noformat}{
+    ""expirationDate"": ""2025-04-10T21:15:41.003937615Z"",
+    ""version"": ""90"",
+    ""number"": ""17611031"",
+    ""category"": ""Consumer"",
+    ""state"": ""IN_PROGRESS"",
+    ""quoteDate"": ""2025-01-10T21:15:41.003937615Z"",
+    ""validFor"": {
+        ""startDateTime"": ""2025-01-10T21:15:41.003937615Z"",
+        ""endDateTime"": ""2025-04-10T21:15:41.003937615Z""
+    },
+    ""quoteItem"": [
+        {
+            ""id"": ""1c4ae44d-71db-4b8d-aef9-b0b00c32c1ae"",
+            ""state"": ""QUALIFIED"",
+            ""quantity"": 1,
+            ""action"": ""ADD"",
+            ""productOffering"": {
+                ""id"": ""2aa83ce6-bc80-421c-a327-1634f4e217e0"",
+                ""@type"": ""ProductOffering""
+            },
+            ""billingAccount"": [],
+            ""quoteItemType"": ""Product offering"",
+            ""marketId"": ""f68ae07a-1940-40f4-b307-f31319249100"",
+            ""distributionChannelId"": ""CPMS_ORGTYENAME_Dir"",
+            ""approvalLevel"": 0,
+            ""businessAction"": ""ADD"",
+            ""overrideMode"": ""NET"",
+            ""isOneTimeOffering"": false,
+            ""@type"": ""QuoteItem""
+        },
+        {
+            ""state"": ""QUALIFIED"",
+            ""quantity"": 1,
+            ""action"": ""ADD"",
+            ""productOffering"": {
+                ""id"": ""41a7d4a3-3be3-4995-b616-af3da2f68626"",
+                ""@type"": ""ProductOffering""
+            },
+            ""parentQuoteItemId"": ""1c4ae44d-71db-4b8d-aef9-b0b00c32c1ae"",
+            ""billingAccount"": [],
+            ""quoteItemType"": ""Product offering"",
+            ""marketId"": ""f68ae07a-1940-40f4-b307-f31319249100"",
+            ""distributionChannelId"": ""CPMS_ORGTYENAME_Dir"",
+            ""approvalLevel"": 0,
+            ""businessAction"": ""ADD"",
+            ""overrideMode"": ""NET"",
+            ""isOneTimeOffering"": false,
+            ""@type"": ""QuoteItem""
+        }
+    ],
+    ""customerCategory"": ""4cb42447-b89e-4cc0-bb47-2b00fac2767e"",
+    ""distributionChannelId"": ""CPMS_ORGTYENAME_Dir"",
+    ""initialDistributionChannelId"": ""CPMS_ORGTYENAME_Dir"",
+    ""newMSA"": false,
+    ""distributionChannelName"": ""External Direct (Dir)"",
+    ""revision"": 0,
+    ""overrideMode"": ""catalogDriven"",
+    ""approvalLevel"": 0,
+     ""extendedParameters"": {
+        ""transaction-family"": [
+            ""productFamily:Over the Top,SmartHome""
+        ]
+    },
+    ""marketRefs"": [
+        {
+            ""marketId"": ""f68ae07a-1940-40f4-b307-f31319249100"",
+            ""marketName"": ""British Columbia""
+        }
+    ],
+    ""brandId"": ""01fdb423-f3d5-46da-8597-789ef250d3e2"",
+    ""target"": [
+        ""SH2.0""
+    ]
+}{noformat}
+
+Sample quotes {{b1fd74e8-abb1-4753-baa6-ecd788b1841c}}, {{3bcef6b0-6a83-4cdc-a7b5-733bf09b6f1e}}, {{eefac905-977f-474d-996d-d17d172cd4d7}}
+
+Expected result: 
+
+Pro Install {{c08a7445-f012-48e2-83e5-357818e5d19d}} should be automatically be added to the quote when Entertainment plan and STB is added
+
+Actual result: Pro Install {{c08a7445-f012-48e2-83e5-357818e5d19d}} is not added to the quote",,,Netcracker Cloud BSS Order Management,,Staging
+Bug,SODP-13987,1112017,[TTA_ITNO2_VOG_OptikTV] 'Create Work Order' task is failing with error 'Customer Contact Name is mandatory' in OM for Optik TV,High,🟠 High,,EOG_E2E_GTM,TTA_OptikTV,,"[TTA_ITNO2_VOG_OptikTV] 'Create Work Order' task is failing with error 'Customer Contact Name is mandatory' in OM for Optik TV
+
+*Steps to reproduce :*
+
+# Create a customer and provide 1.5G with commitment
+# Complete the order from OM
+# Provide Optik TV with below content packs and ala-carte channels:
+a) TCS-ENT-PRS-BASIC
+b) ENT-ADD-CP-BLOCKBUSTERS
+c) ENT-ADD-CP-LIFESTYLE&BEYOND
+d) ENT-ADD-ALC-AAJTAK
+# Submit the order
+# Navigate to OM and search with ECID
+# Open the product order for Optik TV
+# Navigate to the orchestration tab
+
+ 
+
+ER: 'Create Work Order' task should be Completed
+
+AR: 'Create Work Order' task is failing in OM with below Error
+
+*Error:*
+
+{
+	""code"": ""m:TOCP-110"",
+	""reason"": ""0000 - Customer Contact Name is mandatory"",
+	""message"": ""Customer Contact Name is mandatory""
+}
+
+ 
+
+*Customer Details:*
+
+*Full Name:* -TTAFCCBPbpCbANUy RBTTAYNgHwwsx-
+
+*ECID*: -807027886-
+*Location ID* : -20925528-
+*Quote ID* : -7f97d17b-8eea-4048-8c2e-0ba3cc6a2729-
+
+!image-20260327-140008.png|width=880,alt=""image-20260327-140008.png""!",10/Apr/26 12:00 AM,,,ITN02,
