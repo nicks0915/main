@@ -3821,8 +3821,8 @@ function applyFilters() {
                 // do nothing — all records pass
             } else {
                 // Build priority/pastDue filter
-                const isCritical = defectMetricFilters.critical && record.priorityNormalized === 'Critical';
-                const isHigh = defectMetricFilters.high && record.priorityNormalized === 'High';
+                const isCritical = defectMetricFilters.critical && record.severityNormalized === 'Critical';
+                const isHigh = defectMetricFilters.high && record.severityNormalized === 'High';
                 const isPastDue = defectMetricFilters.pastDue && record.dueDateStatus === 'past-due';
 
                 if (defectMetricFilters.pastDue && (defectMetricFilters.critical || defectMetricFilters.high)) {
@@ -3972,16 +3972,16 @@ function clearSearch() {
         function updateMetrics() {
             // Calculate filtered counts
             const filteredStats = {
-                critical: filteredData.filter(d => d.priorityNormalized === 'Critical').length,
-                high: filteredData.filter(d => d.priorityNormalized === 'High').length,
+                critical: filteredData.filter(d => d.severityNormalized === 'Critical').length,
+                high: filteredData.filter(d => d.severityNormalized === 'High').length,
                 pastDue: filteredData.filter(d => d.dueDateStatus === 'past-due').length,
                 total: filteredData.length
             };
 
             // Calculate total counts from all data
             const totalStats = {
-                critical: allData.filter(d => d.priorityNormalized === 'Critical').length,
-                high: allData.filter(d => d.priorityNormalized === 'High').length,
+                critical: allData.filter(d => d.severityNormalized === 'Critical').length,
+                high: allData.filter(d => d.severityNormalized === 'High').length,
                 pastDue: allData.filter(d => d.dueDateStatus === 'past-due').length,
                 total: allData.length
             };
@@ -4013,8 +4013,8 @@ function clearSearch() {
             } else {
                 // Reset to original subtitle text
                 const originalSubtitles = {
-                    'critical-subtitle': 'All Criticals',
-                    'high-subtitle': 'All High Priority', 
+                    'critical-subtitle': 'All Criticals Severity',
+                    'high-subtitle': 'All High Severity',
                     'past-due-subtitle': 'All Past Due',
                     'total-subtitle': 'All Records'
                 };
