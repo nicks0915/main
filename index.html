@@ -3303,11 +3303,24 @@ SODP-10800,VoG CEUAT Prod Order confirmation email missing installation details,
             }
         }
 
+        function normalizeSeverity(val) {
+            if (!val || typeof val !== 'string') return 'Unassigned';
+            // Strip invisible Unicode chars (zero-width space, BOM, soft-hyphen, etc.) that JIRA embeds
+            const cleaned = val.replace(/[\u0000-\u001f\u007f\u00ad\u200b-\u200f\u2028-\u202f\ufeff]/g, '').trim();
+            if (!cleaned) return 'Unassigned';
+            const v = cleaned.toLowerCase();
+            if (v === 'critical' || v.includes('critical')) return 'Critical';
+            if (v === 'high'     || v.includes('high'))     return 'High';
+            if (v === 'medium'   || v.includes('medium'))   return 'Medium';
+            if (v === 'low'      || v.includes('low'))      return 'Low';
+            return cleaned || 'Unassigned';
+        }
+
         function processData(data) {
             console.log('=== PROCESSING DATA ===');
             console.log('Raw data received:', data.length, 'records');
             console.log('Sample raw record:', data[0]);
-            
+
             const today = new Date();
             const processed = data.map((record, index) => {
                 const processedRecord = { ...record };
@@ -3384,7 +3397,7 @@ SODP-10800,VoG CEUAT Prod Order confirmation email missing installation details,
                 
                 // Normalize fields
                 // severityNormalized: prefer primary (Severity SODP), fall back to Severity of Defect
-                processedRecord.severityNormalized = severityField || severityAltField || 'Unassigned';
+                processedRecord.severityNormalized = normalizeSeverity(severityField || severityAltField);
                 processedRecord.priorityNormalized = priorityField || 'Unassigned';
                 processedRecord.applicationNormalized = applicationField || 'Unknown';
                 processedRecord.statusNormalized = normalizeStatus(statusField);
@@ -4846,7 +4859,7 @@ function clearSearch() {
         // Schema version — bump this whenever the CSV column structure changes.
         // Any cached data saved with an older schema version will be auto-discarded
         // so the user is prompted to refresh from JIRA with the new columns.
-        const JIRA_DATA_SCHEMA_VERSION = 3; // v3: removed Severity of Defect column, added Environment column (issue-type-routed)
+        const JIRA_DATA_SCHEMA_VERSION = 4; // v4: normalizeSeverity strips invisible Unicode chars for correct metric counts
 
         function loadPersistedData() {
             try {
@@ -4885,10 +4898,10 @@ function clearSearch() {
 
         function restoreDataTypes(data) {
             console.log('Restoring data types for persisted data...');
-            
+
             return data.map(record => {
                 const restored = { ...record };
-                
+
                 // Restore dueDateParsed from string to Date object
                 if (restored.dueDateParsed && typeof restored.dueDateParsed === 'string') {
                     try {
@@ -4902,7 +4915,12 @@ function clearSearch() {
                         restored.dueDateParsed = null;
                     }
                 }
-                
+
+                // Re-normalize severity in case it was cached before normalizeSeverity existed
+                if (restored.severityNormalized) {
+                    restored.severityNormalized = normalizeSeverity(restored.severityNormalized);
+                }
+
                 return restored;
             });
         }
