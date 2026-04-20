@@ -3303,11 +3303,23 @@ SODP-10800,VoG CEUAT Prod Order confirmation email missing installation details,
             }
         }
 
+        // Normalize raw JIRA severity values to a canonical set regardless of
+        // casing or whitespace differences between SODP and GREEN issue types.
+        function normalizeSeverity(val) {
+            if (!val || typeof val !== 'string') return 'Unassigned';
+            const v = val.trim().toLowerCase();
+            if (v === 'critical') return 'Critical';
+            if (v === 'high')     return 'High';
+            if (v === 'medium')   return 'Medium';
+            if (v === 'low')      return 'Low';
+            return val.trim() || 'Unassigned';
+        }
+
         function processData(data) {
             console.log('=== PROCESSING DATA ===');
             console.log('Raw data received:', data.length, 'records');
             console.log('Sample raw record:', data[0]);
-            
+
             const today = new Date();
             const processed = data.map((record, index) => {
                 const processedRecord = { ...record };
@@ -3384,7 +3396,7 @@ SODP-10800,VoG CEUAT Prod Order confirmation email missing installation details,
                 
                 // Normalize fields
                 // severityNormalized: prefer primary (Severity SODP), fall back to Severity of Defect
-                processedRecord.severityNormalized = severityField || severityAltField || 'Unassigned';
+                processedRecord.severityNormalized = normalizeSeverity(severityField || severityAltField);
                 processedRecord.priorityNormalized = priorityField || 'Unassigned';
                 processedRecord.applicationNormalized = applicationField || 'Unknown';
                 processedRecord.statusNormalized = normalizeStatus(statusField);
@@ -4885,10 +4897,10 @@ function clearSearch() {
 
         function restoreDataTypes(data) {
             console.log('Restoring data types for persisted data...');
-            
+
             return data.map(record => {
                 const restored = { ...record };
-                
+
                 // Restore dueDateParsed from string to Date object
                 if (restored.dueDateParsed && typeof restored.dueDateParsed === 'string') {
                     try {
@@ -4902,7 +4914,12 @@ function clearSearch() {
                         restored.dueDateParsed = null;
                     }
                 }
-                
+
+                // Re-normalize severity in case it was cached before normalizeSeverity existed
+                if (restored.severityNormalized) {
+                    restored.severityNormalized = normalizeSeverity(restored.severityNormalized);
+                }
+
                 return restored;
             });
         }
