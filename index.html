@@ -1678,10 +1678,9 @@ function updateEpicsTable() {
         // Summary
         const summaryCell = row.insertCell();
         summaryCell.textContent = record['Summary'] || '';
-        summaryCell.style.maxWidth = '300px';
-        summaryCell.style.overflow = 'hidden';
-        summaryCell.style.textOverflow = 'ellipsis';
-        summaryCell.style.whiteSpace = 'nowrap';
+        summaryCell.style.minWidth = '200px';
+        summaryCell.style.whiteSpace = 'normal';
+        summaryCell.style.wordBreak = 'break-word';
 
         // Health
         const healthCell = row.insertCell();
@@ -2681,10 +2680,9 @@ function updateEpicsMetrics() {
                 }
                 const summaryCell = row.insertCell();
                 summaryCell.textContent = record['Summary'] || '';
-                summaryCell.style.maxWidth = '300px';
-                summaryCell.style.overflow = 'hidden';
-                summaryCell.style.textOverflow = 'ellipsis';
-                summaryCell.style.whiteSpace = 'nowrap';
+                summaryCell.style.minWidth = '200px';
+                summaryCell.style.whiteSpace = 'normal';
+                summaryCell.style.wordBreak = 'break-word';
                 row.insertCell().textContent = record.applicationNormalized || '';
                 
                 // Gate 2 - Cost Estimate
@@ -4205,10 +4203,9 @@ function clearSearch() {
                 // Summary
                 const summaryCell = row.insertCell();
                 summaryCell.textContent = record.Summary || '';
-                summaryCell.style.maxWidth = '300px';
-                summaryCell.style.overflow = 'hidden';
-                summaryCell.style.textOverflow = 'ellipsis';
-                summaryCell.style.whiteSpace = 'nowrap';
+                summaryCell.style.minWidth = '200px';
+                summaryCell.style.whiteSpace = 'normal';
+                summaryCell.style.wordBreak = 'break-word';
 
                 // Priority (between Summary and Severity)
                 const priorityCell = row.insertCell();
