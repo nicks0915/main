@@ -503,7 +503,7 @@
         <div class="search-section">
             <div class="search-container">
                 <div class="search-input-group">
-                    <input type="text" id="assessment-key-search" placeholder="Search by Key or Assignee (e.g., 11002, SODP-11002, or John Doe)" />
+                    <input type="text" id="assessment-key-search" placeholder="Search..." />
                     <button class="btn btn-secondary" id="assessment-clear-search">✕</button>
                 </div>
                 <div class="search-results">
@@ -682,7 +682,7 @@
         <div class="search-section">
             <div class="search-container">
                 <div class="search-input-group">
-                    <input type="text" id="epic-key-search" placeholder="Search by Key or Assignee (e.g., 11002, SODP-11002, or John Doe)" />
+                    <input type="text" id="epic-key-search" placeholder="Search..." />
                     <button class="btn btn-secondary" id="epic-clear-search">✕</button>
                 </div>
                 <div class="search-results">
@@ -907,7 +907,7 @@
             <div class="search-section">
                 <div class="search-container">
                     <div class="search-input-group">
-                        <input type="text" id="key-search" placeholder="Search by Key or Assignee (e.g., 11002, SODP-11002, or John Doe)" />
+                        <input type="text" id="key-search" placeholder="Search..." />
                         <button class="btn btn-secondary" id="clear-search">✕</button>
                     </div>
                     <div class="search-results">
@@ -1475,10 +1475,19 @@ function applyEpicsFilters() {
 
         function epicsMatchesSearch(record, term) {
             if (!term) return true;
-            const key = record['Work Item Key'] || record['Key'] || '';
-            const assignee = record['Assignee'] || '';
             const termLower = term.toLowerCase();
-            return (key.toLowerCase().includes(termLower) || assignee.toLowerCase().includes(termLower));
+            const searchableFields = [
+                record['Work Item Key'] || record['Key'] || '',
+                record['Summary'] || '',
+                record['Issue Type'] || '',
+                record.applicationNormalized || '',
+                record.statusNormalized || '',
+                record['Start Date'] || '',
+                record['Due Date'] || '',
+                record['Assignee'] || '',
+                Array.isArray(record['Labels']) ? record['Labels'].join(' ') : (record['Labels'] || '')
+            ];
+            return searchableFields.some(field => field.toLowerCase().includes(termLower));
         }
 
         function updateEpicsSearchResults() {
@@ -2566,10 +2575,20 @@ function updateEpicsMetrics() {
 
         function assessmentsMatchesSearch(record, term) {
             if (!term) return true;
-            const key = record['Work Item Key'] || record['Key'] || '';
-            const assignee = record['Assignee'] || '';
             const termLower = term.toLowerCase();
-            return (key.toLowerCase().includes(termLower) || assignee.toLowerCase().includes(termLower));
+            const searchableFields = [
+                record['Work Item Key'] || record['Key'] || '',
+                record['Summary'] || '',
+                record['Issue Type'] || '',
+                record.applicationNormalized || '',
+                record['customfield_20182'] || record['Gate 2 - Cost Estimate'] || '',
+                record.statusNormalized || '',
+                record['Start Date'] || '',
+                record['Due Date'] || '',
+                record['Assignee'] || '',
+                Array.isArray(record['Labels']) ? record['Labels'].join(' ') : (record['Labels'] || '')
+            ];
+            return searchableFields.some(field => field.toLowerCase().includes(termLower));
         }
 
         function updateAssessmentsSearchResults() {
