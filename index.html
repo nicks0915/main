@@ -663,6 +663,15 @@
                         <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">No Due Date</div>
                         <div class="metric-value" id="epics-no-due-date-count" style="color:#007bff; font-size: 1.8rem;">0</div>
                     </div>
+                    <!-- Row 3: Non-Completed Items & Future Dated Items -->
+                    <div class="health-metric-card" id="epics-non-completed-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8; cursor: pointer; transition: all 0.2s;">
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Non-Completed Items</div>
+                        <div class="metric-value" id="epics-non-completed-count" style="color:#17a2b8; font-size: 1.8rem;">0</div>
+                    </div>
+                    <div class="health-metric-card" id="epics-future-dated-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745; cursor: pointer; transition: all 0.2s;">
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Future Dated Items</div>
+                        <div class="metric-value" id="epics-future-dated-count" style="color:#28a745; font-size: 1.8rem;">0</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1440,6 +1449,21 @@ function applyEpicsFilters() {
                 const recStatusForNoDue = (record.statusNormalized || '').toLowerCase();
                 if (noDueDateExcludedStatuses.includes(recStatusForNoDue)) return false;
             }
+            if (epicsHealthFilter === "nonCompleted") {
+                const ncExcluded = ['done', 'obsolete', 'ready for testing', 'ready to test', 'cio ready'];
+                const recStatus = (record.statusNormalized || '').toLowerCase();
+                if (ncExcluded.includes(recStatus)) return false;
+            }
+            if (epicsHealthFilter === "futureDated") {
+                const dueDateStr = record['Due Date'] || '';
+                if (!dueDateStr) return false;
+                const dueDate = new Date(dueDateStr);
+                if (isNaN(dueDate.getTime())) return false;
+                const today = new Date();
+                const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const dueDateStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+                if (dueDateStart <= todayStart) return false;
+            }
         }
         // Search filter
         if (epicsSearchTerm && !epicsMatchesSearch(record, epicsSearchTerm)) {
@@ -1938,10 +1962,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners for Health Metric CARDS (entire card is clickable)
     function setHealthMetricListeners() {
         const healthCards = [
-            { cardId: 'epics-non-green-card', filter: 'red' },
-            { cardId: 'epics-unassigned-card', filter: 'unassigned' },
-            { cardId: 'epics-past-due-card', filter: 'pastDue' },
-            { cardId: 'epics-no-due-date-card', filter: 'noDueDate' }
+            { cardId: 'epics-non-green-card',      filter: 'red'          },
+            { cardId: 'epics-unassigned-card',      filter: 'unassigned'   },
+            { cardId: 'epics-past-due-card',        filter: 'pastDue'      },
+            { cardId: 'epics-no-due-date-card',     filter: 'noDueDate'    },
+            { cardId: 'epics-non-completed-card',   filter: 'nonCompleted' },
+            { cardId: 'epics-future-dated-card',    filter: 'futureDated'  }
         ];
         healthCards.forEach(({ cardId, filter }) => {
             const card = document.getElementById(cardId);
@@ -1965,7 +1991,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function highlightHealthMetricCard(activeCardId) {
-        const allCardIds = ['epics-non-green-card', 'epics-unassigned-card', 'epics-past-due-card', 'epics-no-due-date-card'];
+        const allCardIds = ['epics-non-green-card', 'epics-unassigned-card', 'epics-past-due-card', 'epics-no-due-date-card', 'epics-non-completed-card', 'epics-future-dated-card'];
         allCardIds.forEach(id => {
             const card = document.getElementById(id);
             if (card) {
@@ -1994,7 +2020,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Global function to clear health metric card highlights (used by clearAllEpicsFilters)
 function clearHealthMetricHighlight() {
-    ['epics-non-green-card', 'epics-unassigned-card', 'epics-past-due-card', 'epics-no-due-date-card'].forEach(id => {
+    ['epics-non-green-card', 'epics-unassigned-card', 'epics-past-due-card', 'epics-no-due-date-card', 'epics-non-completed-card', 'epics-future-dated-card'].forEach(id => {
         const card = document.getElementById(id);
         if (card) {
             card.classList.remove('active');
@@ -2172,7 +2198,7 @@ function updateEpicsMetrics() {
     // the issue-type click-filter — so no extra logic is needed here.
 
     const today = new Date();
-    let nonGreenCount = 0, unassignedCount = 0, pastDueCount = 0, noDueDateCount = 0;
+    let nonGreenCount = 0, unassignedCount = 0, pastDueCount = 0, noDueDateCount = 0, nonCompletedCount = 0, futureDatedCount = 0;
 
     // countSource === epicsFilteredData (already filtered by all active filters including issue-type click)
     countSource.forEach(d => {
@@ -2212,7 +2238,18 @@ function updateEpicsMetrics() {
                 if (dueDateStart < todayStart && !pastDueExcludedStatuses.includes(dStatus)) {
                     pastDueCount++;
                 }
+                // Future Dated Items: valid due date strictly after today
+                if (dueDateStart > todayStart) {
+                    futureDatedCount++;
+                }
             }
+        }
+
+        // Non-Completed Items: status not in the completed/closed set
+        const nonCompletedExcludedStatuses = ['done', 'obsolete', 'ready for testing', 'ready to test', 'cio ready'];
+        const recStatusForNC = (d.statusNormalized || '').toLowerCase();
+        if (!nonCompletedExcludedStatuses.includes(recStatusForNC)) {
+            nonCompletedCount++;
         }
     });
 
@@ -2225,6 +2262,10 @@ function updateEpicsMetrics() {
     if (unassignedElem) unassignedElem.textContent = unassignedCount;
     if (pastDueElem) pastDueElem.textContent = pastDueCount;
     if (noDueElem) noDueElem.textContent = noDueDateCount;
+    const nonCompletedElem = document.getElementById('epics-non-completed-count');
+    const futureDatedElem  = document.getElementById('epics-future-dated-count');
+    if (nonCompletedElem) nonCompletedElem.textContent = nonCompletedCount;
+    if (futureDatedElem)  futureDatedElem.textContent  = futureDatedCount;
 }
         // ===== EPICS JIRA REFRESH INFO (MATCH DEFECTS TAB) =====
 
