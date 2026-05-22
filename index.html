@@ -2373,7 +2373,8 @@ function updateEpicsMetrics() {
         };
         let assessmentsSearchTerm = '';
         let assessmentsHealthFilter = null;
-        let assessmentsCostFilter = null; // "missingCost", "highCost", "unassigned", "noDueDate" or null
+        let assessmentsCostFilter = null;   // "missingCost", "highCost", "completed", "nonCompleted" or null
+        let assessmentsTypeFilter = null;   // "Epic", "Story", "Capability" or null (cost-box row click)
         let assessmentsSortConfig = {
             column: null,
             direction: 'asc'
@@ -2467,7 +2468,7 @@ function updateEpicsMetrics() {
         });
 
         function setupAssessmentsFiltersAndSearch() {
-            ['assessment-issue-type', 'assessment-app', 'assessment-status'].forEach(type => {
+            ['assessment-issue-type', 'assessment-app', 'assessment-status', 'assessment-iterations'].forEach(type => {
                 const btn = document.getElementById(type + '-btn');
                 if (btn) btn.addEventListener('click', () => toggleAssessmentsDropdown(type));
             });
@@ -2502,9 +2503,21 @@ function updateEpicsMetrics() {
             populateAssessmentsDropdown('assessment-app', applications);
             const statuses = [...new Set(assessmentsData.map(d => d.statusNormalized || ''))].filter(Boolean).sort();
             populateAssessmentsDropdown('assessment-status', statuses);
+            // Iterations: extracted from Labels field (same as Work Items tab)
+            const allIterations = new Set();
+            assessmentsData.forEach(d => {
+                extractIterations(d['Labels'] || d['labels'] || '').forEach(iter => allIterations.add(iter));
+            });
+            const iterations = [...allIterations].sort((a, b) => {
+                const na = parseInt(a), nb = parseInt(b);
+                if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                return a.localeCompare(b);
+            });
+            populateAssessmentsDropdown('assessment-iterations', iterations);
             updateAssessmentsButtonText('assessment-issue-type', assessmentsFilters.issueTypes, 'All Issue Types');
             updateAssessmentsButtonText('assessment-app', assessmentsFilters.applications, 'All Applications');
             updateAssessmentsButtonText('assessment-status', assessmentsFilters.statuses, 'All Statuses');
+            updateAssessmentsButtonText('assessment-iterations', assessmentsFilters.iterations, 'All Iterations');
         }
 
         function populateAssessmentsDropdown(type, options) {
@@ -2523,9 +2536,11 @@ function updateEpicsMetrics() {
             assessmentsFilters.issueTypes = getAssessmentsSelectedValues('assessment-issue-type');
             assessmentsFilters.applications = getAssessmentsSelectedValues('assessment-app');
             assessmentsFilters.statuses = getAssessmentsSelectedValues('assessment-status');
+            assessmentsFilters.iterations = getAssessmentsSelectedValues('assessment-iterations');
             updateAssessmentsButtonText('assessment-issue-type', assessmentsFilters.issueTypes, 'All Issue Types');
             updateAssessmentsButtonText('assessment-app', assessmentsFilters.applications, 'All Applications');
             updateAssessmentsButtonText('assessment-status', assessmentsFilters.statuses, 'All Statuses');
+            updateAssessmentsButtonText('assessment-iterations', assessmentsFilters.iterations, 'All Iterations');
             applyAssessmentsFilters();
         }
 
@@ -2555,7 +2570,15 @@ function updateEpicsMetrics() {
                 if (assessmentsFilters.issueTypes.length > 0 && !assessmentsFilters.issueTypes.includes(record.issueTypeNormalized || '')) return false;
                 if (assessmentsFilters.applications.length > 0 && !assessmentsFilters.applications.includes(record.applicationNormalized || '')) return false;
                 if (assessmentsFilters.statuses.length > 0 && !assessmentsFilters.statuses.includes(record.statusNormalized || '')) return false;
-
+                // Iterations filter (from Labels field)
+                if (assessmentsFilters.iterations.length > 0) {
+                    const recordIterations = extractIterations(record['Labels'] || record['labels'] || '');
+                    if (!recordIterations.some(iter => assessmentsFilters.iterations.includes(iter))) return false;
+                }
+                // Type filter (from Cost box row click)
+                if (assessmentsTypeFilter) {
+                    if ((record.issueTypeNormalized || '').toLowerCase() !== assessmentsTypeFilter.toLowerCase()) return false;
+                }
                 // Cost / status filter from metric card clicks
                 if (assessmentsCostFilter) {
                     const costStr = record['customfield_20182'] || record['Gate 2 - Cost Estimate'] || '';
@@ -2626,19 +2649,21 @@ function updateEpicsMetrics() {
         }
 
         function clearAllAssessmentsFilters() {
-            assessmentsFilters = { issueTypes: [], applications: [], statuses: [] };
+            assessmentsFilters = { issueTypes: [], applications: [], statuses: [], iterations: [] };
             assessmentsSearchTerm = '';
             assessmentsHealthFilter = null;
             assessmentsCostFilter = null;
+            assessmentsTypeFilter = null;
             clearAssessmentsCostMetricHighlight();
             const searchInput = document.getElementById('assessment-key-search');
             if (searchInput) searchInput.value = '';
-            ['assessment-issue-type', 'assessment-app', 'assessment-status'].forEach(type => {
+            ['assessment-issue-type', 'assessment-app', 'assessment-status', 'assessment-iterations'].forEach(type => {
                 document.querySelectorAll(`#${type}-options input[type="checkbox"]`).forEach(cb => cb.checked = false);
             });
             updateAssessmentsButtonText('assessment-issue-type', [], 'All Issue Types');
             updateAssessmentsButtonText('assessment-app', [], 'All Applications');
             updateAssessmentsButtonText('assessment-status', [], 'All Statuses');
+            updateAssessmentsButtonText('assessment-iterations', [], 'All Iterations');
             closeAllAssessmentsDropdowns();
             applyAssessmentsFilters();
         }
@@ -2805,28 +2830,58 @@ function updateEpicsMetrics() {
                         <span style="font-size:0.75rem;color:#888;font-weight:600;text-align:right;min-width:90px;padding-left:12px;">Cost</span>
                     `;
                     costContainer.appendChild(hdr);
-                    // Type rows
-                    DISPLAY_TYPES.forEach(type => {
-                        const t = typeCosts[type];
-                        if (!t) return;
+
+                    // Helper: create a clickable type row
+                    function makeTypeRow(type, t) {
                         const row = document.createElement('div');
-                        row.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:5px 8px;border-bottom:1px solid #f0f0f0;';
+                        const isActive = assessmentsTypeFilter === type;
+                        row.className = 'assessments-type-row' + (isActive ? ' active' : '');
+                        row.dataset.type = type;
+                        row.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;padding:5px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.15s;border-radius:4px;' + (isActive ? 'background:#e8f4fd;' : '');
                         row.innerHTML = `
+                            <span class="type-row-check" style="font-size:0.8rem;color:#007bff;">${isActive ? '✓' : ''}</span>
                             <span style="font-size:0.9rem;color:#333;font-weight:500;">${type}</span>
                             <span style="font-size:0.9rem;color:#555;text-align:right;min-width:52px;padding-left:12px;">${t.count}</span>
                             <span style="font-size:0.9rem;color:#28a745;font-weight:600;text-align:right;min-width:90px;padding-left:12px;">${formatCostValue(t.cost)}</span>
                         `;
-                        costContainer.appendChild(row);
-                    });
-                    // Total row
-                    const totalRow = document.createElement('div');
-                    totalRow.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:6px 8px;border-top:2px solid #dee2e6;background:#f0f4ff;border-radius:4px;margin-top:2px;';
-                    totalRow.innerHTML = `
+                        row.addEventListener('click', function() {
+                            if (assessmentsTypeFilter === type) {
+                                assessmentsTypeFilter = null;
+                            } else {
+                                assessmentsTypeFilter = type;
+                            }
+                            applyAssessmentsFilters();
+                        });
+                        row.addEventListener('mouseenter', function() { if (!isActive) row.style.background = '#f8f9fa'; });
+                        row.addEventListener('mouseleave', function() { if (!isActive) row.style.background = ''; });
+                        return row;
+                    }
+
+                    // Epic row
+                    if (typeCosts['Epic']) costContainer.appendChild(makeTypeRow('Epic', typeCosts['Epic']));
+                    // Story row
+                    if (typeCosts['Story']) costContainer.appendChild(makeTypeRow('Story', typeCosts['Story']));
+
+                    // Epic + Story subtotal row (non-clickable)
+                    const esCount = (typeCosts['Epic'] ? typeCosts['Epic'].count : 0) + (typeCosts['Story'] ? typeCosts['Story'].count : 0);
+                    const esCost  = (typeCosts['Epic'] ? typeCosts['Epic'].cost  : 0) + (typeCosts['Story'] ? typeCosts['Story'].cost  : 0);
+                    const subtotalRow = document.createElement('div');
+                    subtotalRow.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;padding:6px 8px;border-top:2px solid #dee2e6;border-bottom:2px solid #dee2e6;background:#f0f4ff;border-radius:4px;margin-top:2px;';
+                    subtotalRow.innerHTML = `
+                        <span></span>
                         <span style="font-size:0.9rem;color:#333;font-weight:700;">Total</span>
-                        <span style="font-size:0.9rem;color:#333;font-weight:700;text-align:right;min-width:52px;padding-left:12px;">${grandTotal}</span>
-                        <span style="font-size:0.9rem;color:#28a745;font-weight:700;text-align:right;min-width:90px;padding-left:12px;">${formatCostValue(grandCost)}</span>
+                        <span style="font-size:0.9rem;color:#333;font-weight:700;text-align:right;min-width:52px;padding-left:12px;">${esCount}</span>
+                        <span style="font-size:0.9rem;color:#28a745;font-weight:700;text-align:right;min-width:90px;padding-left:12px;">${formatCostValue(esCost)}</span>
                     `;
-                    costContainer.appendChild(totalRow);
+                    costContainer.appendChild(subtotalRow);
+
+                    // Capability row (with spacing separator)
+                    if (typeCosts['Capability']) {
+                        const spacer = document.createElement('div');
+                        spacer.style.cssText = 'height:6px;';
+                        costContainer.appendChild(spacer);
+                        costContainer.appendChild(makeTypeRow('Capability', typeCosts['Capability']));
+                    }
                 }
             }
 
@@ -2978,28 +3033,31 @@ function updateEpicsMetrics() {
                 enableAssessmentsFilter('assessment-issue-type');
                 enableAssessmentsFilter('assessment-status');
             } else if (viewType === 'application') {
-                applicationView.classList.add('active');
                 applicationBtn.classList.add('active');
-                
+
                 // Disable Issue Type and Status filters in Application view
                 disableAssessmentsFilter('assessment-issue-type');
                 disableAssessmentsFilter('assessment-status');
-                
+
                 // Clear Issue Type and Status selections
                 assessmentsFilters.issueTypes = [];
                 assessmentsFilters.statuses = [];
-                
+
                 // Uncheck all Issue Type and Status checkboxes
                 document.querySelectorAll('#assessment-issue-type-options input[type="checkbox"]').forEach(cb => cb.checked = false);
                 document.querySelectorAll('#assessment-status-options input[type="checkbox"]').forEach(cb => cb.checked = false);
-                
+
                 // Update button text
                 updateAssessmentsButtonText('assessment-issue-type', [], 'All Issue Types');
                 updateAssessmentsButtonText('assessment-status', [], 'All Statuses');
-                
+
                 // Re-apply filters with cleared Issue Type and Status
                 applyAssessmentsFilters();
-                
+
+                // Show application view AFTER filters applied (must be after so applyAssessmentsFilters
+                // auto-switch-to-list logic doesn't fire on this intentional transition)
+                applicationView.classList.add('active');
+
                 // Render application cost view when this view is activated
                 renderApplicationCostView();
             }
