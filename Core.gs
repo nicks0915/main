@@ -14,7 +14,7 @@ const CONFIG = {
   FEATURE_FLAGS: {
     betaLaunchGating: false,   // true = Beta Launch Gating checkbox is enabled; false = disabled (greyed out)
     gtmLaunchGating: false,    // true = GTM Launch Gating checkbox is enabled; false = disabled (greyed out)
-    assessmentsTab: false,     // true = Assessments tab button is clickable; false = disabled (greyed out)
+    assessmentsTab: true,      // true = Assessments tab button is clickable; false = disabled (greyed out)
     testingTab: false          // true = Testing Status tab button is clickable; false = disabled (greyed out)
   },
 

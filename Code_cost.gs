@@ -682,7 +682,8 @@ function exportAssessmentsToSheet(filteredData) {
     return {
       success: true,
       message: `Successfully exported ${recordCount} record${recordCount !== 1 ? 's' : ''} to Google Sheet`,
-      recordCount: recordCount
+      recordCount: recordCount,
+      sheetUrl: spreadsheet.getUrl()
     };
     
   } catch (error) {

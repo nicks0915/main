@@ -446,17 +446,13 @@
             </div>
         </div>
     </div>
-        <!-- Assessments Metrics and Health Metrics -->
+        <!-- Assessments Metrics and Cost Metrics -->
         <div class="metrics" id="assessments-metrics">
-            <div class="metric total" id="assessments-assessment-metric">
-                <h3>Epics</h3>
-                <div class="metric-value" id="assessments-assessment-count">0</div>
-                <div class="metric-subtitle" id="assessments-epic-cost" style="color:#28a745;font-weight:600;margin-top:5px;">Total Cost: $0</div>
-            </div>
-            <div class="metric total" id="assessments-story-metric">
-                <h3>Stories</h3>
-                <div class="metric-value" id="assessments-story-count">0</div>
-                <div class="metric-subtitle" id="assessments-story-cost" style="color:#28a745;font-weight:600;margin-top:5px;">Total Cost: $0</div>
+            <div class="metric total" id="assessments-cost-left" style="min-width:220px;">
+                <h3>Cost</h3>
+                <div id="assessments-cost-counts" style="margin-top:8px;">
+                    <div style="color:#999;font-size:0.9rem;">No data loaded</div>
+                </div>
             </div>
             <div class="metric" id="assessments-cost-metrics" style="min-width:400px;">
                 <h3 style="margin-bottom: 15px;">Cost Metrics</h3>
@@ -467,17 +463,17 @@
                         <div class="metric-value" id="assessments-missing-cost-count" style="color:#dc3545; font-size: 1.8rem;">0</div>
                     </div>
                     <div class="health-metric-card" id="assessments-high-cost-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #fd7e14; cursor: pointer; transition: all 0.2s;">
-                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">High Cost Items (>$100k)</div>
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">High Cost Items (&gt;$100k)</div>
                         <div class="metric-value" id="assessments-high-cost-count" style="color:#fd7e14; font-size: 1.8rem;">0</div>
                     </div>
-                    <!-- Row 2: Unassigned & No Due Date -->
-                    <div class="health-metric-card" id="assessments-unassigned-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #fd7e14; cursor: pointer; transition: all 0.2s;">
-                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Unassigned</div>
-                        <div class="metric-value" id="assessments-unassigned-count" style="color:#fd7e14; font-size: 1.8rem;">0</div>
+                    <!-- Row 2: Completed Items & Non-Completed Items -->
+                    <div class="health-metric-card" id="assessments-completed-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745; cursor: pointer; transition: all 0.2s;">
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Completed Items</div>
+                        <div class="metric-value" id="assessments-completed-count" style="color:#28a745; font-size: 1.8rem;">0</div>
                     </div>
-                    <div class="health-metric-card" id="assessments-no-due-date-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff; cursor: pointer; transition: all 0.2s;">
-                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">No Due Date</div>
-                        <div class="metric-value" id="assessments-no-due-date-count" style="color:#007bff; font-size: 1.8rem;">0</div>
+                    <div class="health-metric-card" id="assessments-non-completed-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8; cursor: pointer; transition: all 0.2s;">
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Non-Completed Items</div>
+                        <div class="metric-value" id="assessments-non-completed-count" style="color:#17a2b8; font-size: 1.8rem;">0</div>
                     </div>
                 </div>
             </div>
@@ -538,14 +534,6 @@
                         <th class="sortable" id="assessments-status-header">
                             Status
                             <span class="sort-indicator" id="assessments-status-sort-indicator">⇅</span>
-                        </th>
-                        <th class="sortable" id="assessments-start-date-header">
-                            Start Date
-                            <span class="sort-indicator" id="assessments-start-date-sort-indicator">⇅</span>
-                        </th>
-                        <th class="sortable" id="assessments-due-date-header">
-                            Due Date
-                            <span class="sort-indicator" id="assessments-due-date-sort-indicator">⇅</span>
                         </th>
                         <th class="sortable" id="assessments-assignee-header">
                             Assignee
@@ -2408,6 +2396,8 @@ function updateEpicsMetrics() {
             });
         }
 
+        const ASSESSMENTS_ALLOWED_TYPES = ['epic', 'story', 'capability'];
+
         function normalizeAssessmentsData(data) {
             return data.map(record => {
                 const app = record['customfield_19182'] || record['Custom field (Application )'] || record['Application'] || record['Application '] || '';
@@ -2423,7 +2413,7 @@ function updateEpicsMetrics() {
                     statusNormalized: (status || '').trim(),
                     healthCustomFieldValue: healthValue
                 };
-            });
+            }).filter(record => ASSESSMENTS_ALLOWED_TYPES.includes((record.issueTypeNormalized || '').toLowerCase()));
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -2552,40 +2542,41 @@ function updateEpicsMetrics() {
             else textElement.textContent = selected.length + ' selected';
         }
 
+        const ASSESSMENTS_COMPLETED_STATUSES = ['done', 'obsolete', 'ready for testing', 'ready to test', 'cio ready'];
+
         function applyAssessmentsFilters() {
+            // If application view is active, switch to list view so the user sees filtered results
+            const appView = document.getElementById('assessments-application-view');
+            if (appView && appView.classList.contains('active')) {
+                switchAssessmentsView('list');
+            }
+
             assessmentsFilteredData = assessmentsData.filter(record => {
                 if (assessmentsFilters.issueTypes.length > 0 && !assessmentsFilters.issueTypes.includes(record.issueTypeNormalized || '')) return false;
                 if (assessmentsFilters.applications.length > 0 && !assessmentsFilters.applications.includes(record.applicationNormalized || '')) return false;
                 if (assessmentsFilters.statuses.length > 0 && !assessmentsFilters.statuses.includes(record.statusNormalized || '')) return false;
-                
-                // Cost filter logic
+
+                // Cost / status filter from metric card clicks
                 if (assessmentsCostFilter) {
                     const costStr = record['customfield_20182'] || record['Gate 2 - Cost Estimate'] || '';
                     const costValue = parseCostValue(costStr);
-                    
+
                     if (assessmentsCostFilter === "missingCost") {
-                        // Missing cost: empty or null (NOT $0)
                         if (costStr && costStr.trim() !== '') return false;
                     }
                     if (assessmentsCostFilter === "highCost") {
-                        // High cost: > $100k
                         if (costValue <= 100000) return false;
                     }
-                    if (assessmentsCostFilter === "unassigned") {
-                        const assignee = (record['Assignee'] || '').trim().toLowerCase();
-                        if (assignee && assignee !== 'unassigned') return false;
+                    if (assessmentsCostFilter === "completed") {
+                        const recStatus = (record.statusNormalized || '').toLowerCase();
+                        if (!ASSESSMENTS_COMPLETED_STATUSES.includes(recStatus)) return false;
                     }
-                    if (assessmentsCostFilter === "noDueDate") {
-                        const dueDateStr = record['Due Date'] || '';
-                        if (!dueDateStr) {
-                            // No due date - include
-                        } else {
-                            const dueDate = new Date(dueDateStr);
-                            if (!isNaN(dueDate.getTime())) return false;
-                        }
+                    if (assessmentsCostFilter === "nonCompleted") {
+                        const recStatus = (record.statusNormalized || '').toLowerCase();
+                        if (ASSESSMENTS_COMPLETED_STATUSES.includes(recStatus)) return false;
                     }
                 }
-                
+
                 if (assessmentsSearchTerm && !assessmentsMatchesSearch(record, assessmentsSearchTerm)) return false;
                 return true;
             });
@@ -2699,7 +2690,7 @@ function updateEpicsMetrics() {
             if (!assessmentsFilteredData || assessmentsFilteredData.length === 0) {
                 const row = tbody.insertRow();
                 const cell = row.insertCell();
-                cell.colSpan = 9;
+                cell.colSpan = 8;
                 cell.textContent = 'No Assessments data loaded.';
                 cell.style.textAlign = 'center';
                 cell.style.padding = '40px';
@@ -2734,12 +2725,6 @@ function updateEpicsMetrics() {
                 costEstimateCell.textContent = costEstimateValue;
                 
                 row.insertCell().textContent = record.statusNormalized || '';
-                
-                // Start Date
-                const startDateCell = row.insertCell();
-                startDateCell.textContent = record['Start Date'] || '';
-                
-                row.insertCell().textContent = record['Due Date'] || '';
                 row.insertCell().textContent = record['Assignee'] || 'Unassigned';
                 
                 // Labels
@@ -2785,92 +2770,88 @@ function updateEpicsMetrics() {
         }
 
         function updateAssessmentsMetrics() {
-            const selectedTypes = (assessmentsFilters.issueTypes || []).map(t => (t || '').toLowerCase());
-            const showEpics = selectedTypes.length === 0 || selectedTypes.includes('epic');
-            const showStories = selectedTypes.length === 0 || selectedTypes.includes('story');
-            
             const data = assessmentsFilteredData;
-            
-            // Count Epics and Stories
-            const epicData = data.filter(d => (d.issueTypeNormalized || '').toLowerCase() === 'epic');
-            const storyData = data.filter(d => (d.issueTypeNormalized || '').toLowerCase() === 'story');
-            const epicCount = epicData.length;
-            const storyCount = storyData.length;
-            
-            // Calculate total costs for Epics and Stories
-            let epicTotalCost = 0;
-            let storyTotalCost = 0;
-            
-            epicData.forEach(d => {
-                const costStr = d['customfield_20182'] || d['Gate 2 - Cost Estimate'] || '';
-                epicTotalCost += parseCostValue(costStr);
-            });
-            
-            storyData.forEach(d => {
-                const costStr = d['customfield_20182'] || d['Gate 2 - Cost Estimate'] || '';
-                storyTotalCost += parseCostValue(costStr);
-            });
-            
-            // Update counts
-            document.getElementById('assessments-assessment-count').textContent = epicCount;
-            document.getElementById('assessments-story-count').textContent = storyCount;
-            
-            // Update cost displays
-            document.getElementById('assessments-epic-cost').textContent = 'Total Cost: ' + formatCostValue(epicTotalCost);
-            document.getElementById('assessments-story-cost').textContent = 'Total Cost: ' + formatCostValue(storyTotalCost);
-            
-            // Show/hide metric cards based on Issue Type filter selection
-            const epicMetric = document.getElementById('assessments-assessment-metric');
-            const storyMetric = document.getElementById('assessments-story-metric');
-            
-            if (epicMetric) epicMetric.style.display = showEpics ? 'block' : 'none';
-            if (storyMetric) storyMetric.style.display = showStories ? 'block' : 'none';
-            
-            // --- Cost Metrics ---
-            // Missing Cost Estimate: Gate 2 Cost is empty or null (NOT counting $0)
-            // High Cost Items: Gate 2 Cost > $100,000
-            // Unassigned: Assignee is empty, null, or "Unassigned"
-            // No Due Date: Due Date is empty or invalid
-            
-            const today = new Date();
-            let missingCostCount = 0, highCostCount = 0, unassignedCount = 0, noDueDateCount = 0;
-            
+
+            // --- Left "Cost" box: rows for Epic, Story, Capability ---
+            const DISPLAY_TYPES = ['Epic', 'Story', 'Capability'];
+            const typeCosts = {};
+            let grandTotal = 0, grandCost = 0;
+
             data.forEach(d => {
-                // Missing Cost Estimate - empty or null only (NOT $0)
+                const rawType = (d.issueTypeNormalized || '').trim();
+                const matchKey = DISPLAY_TYPES.find(t => t.toLowerCase() === rawType.toLowerCase());
+                if (!matchKey) return;
+                if (!typeCosts[matchKey]) typeCosts[matchKey] = { count: 0, cost: 0 };
+                const costStr = d['customfield_20182'] || d['Gate 2 - Cost Estimate'] || '';
+                const costVal = parseCostValue(costStr);
+                typeCosts[matchKey].count++;
+                typeCosts[matchKey].cost += costVal;
+                grandTotal++;
+                grandCost += costVal;
+            });
+
+            const costContainer = document.getElementById('assessments-cost-counts');
+            if (costContainer) {
+                if (grandTotal === 0) {
+                    costContainer.innerHTML = '<div style="color:#999;font-size:0.9rem;">No data loaded</div>';
+                } else {
+                    costContainer.innerHTML = '';
+                    // Header
+                    const hdr = document.createElement('div');
+                    hdr.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:3px 8px 6px 8px;border-bottom:2px solid #dee2e6;';
+                    hdr.innerHTML = `
+                        <span style="font-size:0.75rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Type</span>
+                        <span style="font-size:0.75rem;color:#888;font-weight:600;text-align:right;min-width:52px;padding-left:12px;">Total</span>
+                        <span style="font-size:0.75rem;color:#888;font-weight:600;text-align:right;min-width:90px;padding-left:12px;">Cost</span>
+                    `;
+                    costContainer.appendChild(hdr);
+                    // Type rows
+                    DISPLAY_TYPES.forEach(type => {
+                        const t = typeCosts[type];
+                        if (!t) return;
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:5px 8px;border-bottom:1px solid #f0f0f0;';
+                        row.innerHTML = `
+                            <span style="font-size:0.9rem;color:#333;font-weight:500;">${type}</span>
+                            <span style="font-size:0.9rem;color:#555;text-align:right;min-width:52px;padding-left:12px;">${t.count}</span>
+                            <span style="font-size:0.9rem;color:#28a745;font-weight:600;text-align:right;min-width:90px;padding-left:12px;">${formatCostValue(t.cost)}</span>
+                        `;
+                        costContainer.appendChild(row);
+                    });
+                    // Total row
+                    const totalRow = document.createElement('div');
+                    totalRow.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:6px 8px;border-top:2px solid #dee2e6;background:#f0f4ff;border-radius:4px;margin-top:2px;';
+                    totalRow.innerHTML = `
+                        <span style="font-size:0.9rem;color:#333;font-weight:700;">Total</span>
+                        <span style="font-size:0.9rem;color:#333;font-weight:700;text-align:right;min-width:52px;padding-left:12px;">${grandTotal}</span>
+                        <span style="font-size:0.9rem;color:#28a745;font-weight:700;text-align:right;min-width:90px;padding-left:12px;">${formatCostValue(grandCost)}</span>
+                    `;
+                    costContainer.appendChild(totalRow);
+                }
+            }
+
+            // --- Cost Metrics cards ---
+            let missingCostCount = 0, highCostCount = 0, completedCount = 0, nonCompletedCount = 0;
+
+            data.forEach(d => {
                 const costStr = d['customfield_20182'] || d['Gate 2 - Cost Estimate'] || '';
                 if (!costStr || costStr.trim() === '') {
                     missingCostCount++;
                 } else {
-                    // High Cost Items - > $100k
-                    const costValue = parseCostValue(costStr);
-                    if (costValue > 100000) {
-                        highCostCount++;
-                    }
+                    if (parseCostValue(costStr) > 100000) highCostCount++;
                 }
-                
-                // Unassigned count
-                const assignee = (d['Assignee'] || '').trim().toLowerCase();
-                if (!assignee || assignee === 'unassigned') {
-                    unassignedCount++;
-                }
-                
-                // No Due Date count
-                const dueDateStr = d['Due Date'] || '';
-                if (!dueDateStr) {
-                    noDueDateCount++;
+                const recStatus = (d.statusNormalized || '').toLowerCase();
+                if (ASSESSMENTS_COMPLETED_STATUSES.includes(recStatus)) {
+                    completedCount++;
                 } else {
-                    const dueDate = new Date(dueDateStr);
-                    if (isNaN(dueDate.getTime())) {
-                        noDueDateCount++;
-                    }
+                    nonCompletedCount++;
                 }
             });
-            
-            // Update Cost Metrics UI
+
             document.getElementById('assessments-missing-cost-count').textContent = missingCostCount;
             document.getElementById('assessments-high-cost-count').textContent = highCostCount;
-            document.getElementById('assessments-unassigned-count').textContent = unassignedCount;
-            document.getElementById('assessments-no-due-date-count').textContent = noDueDateCount;
+            document.getElementById('assessments-completed-count').textContent = completedCount;
+            document.getElementById('assessments-non-completed-count').textContent = nonCompletedCount;
         }
 
         function saveAssessmentsJiraData(data) {
@@ -2908,28 +2889,45 @@ function updateEpicsMetrics() {
         }
 
         function clearAssessmentsCostMetricHighlight() {
-            ['assessments-missing-cost-card', 'assessments-high-cost-card', 'assessments-unassigned-card', 'assessments-no-due-date-card'].forEach(id => {
+            ['assessments-missing-cost-card', 'assessments-high-cost-card', 'assessments-completed-card', 'assessments-non-completed-card'].forEach(id => {
                 const elem = document.getElementById(id);
                 if (elem) {
                     elem.classList.remove('active');
+                    const existingCb = elem.querySelector('.metric-selected-checkbox');
+                    if (existingCb) existingCb.remove();
                 }
             });
         }
         
         function highlightAssessmentsCostMetric(activeId) {
             clearAssessmentsCostMetricHighlight();
-            const elem = document.getElementById(activeId);
-            if (elem) {
-                elem.classList.add('active');
-            }
+            const allIds = ['assessments-missing-cost-card', 'assessments-high-cost-card', 'assessments-completed-card', 'assessments-non-completed-card'];
+            allIds.forEach(id => {
+                const elem = document.getElementById(id);
+                if (!elem) return;
+                if (id === activeId) {
+                    elem.classList.add('active');
+                    if (!elem.querySelector('.metric-selected-checkbox')) {
+                        const cb = document.createElement('input');
+                        cb.type = 'checkbox';
+                        cb.checked = true;
+                        cb.className = 'metric-selected-checkbox';
+                        elem.appendChild(cb);
+                    }
+                } else {
+                    elem.classList.remove('active');
+                    const existingCb = elem.querySelector('.metric-selected-checkbox');
+                    if (existingCb) existingCb.remove();
+                }
+            });
         }
         
         function setAssessmentsCostMetricListeners() {
             const costMetrics = [
-                { id: 'assessments-missing-cost-card', filter: 'missingCost' },
-                { id: 'assessments-high-cost-card', filter: 'highCost' },
-                { id: 'assessments-unassigned-card', filter: 'unassigned' },
-                { id: 'assessments-no-due-date-card', filter: 'noDueDate' }
+                { id: 'assessments-missing-cost-card',   filter: 'missingCost'   },
+                { id: 'assessments-high-cost-card',      filter: 'highCost'      },
+                { id: 'assessments-completed-card',      filter: 'completed'     },
+                { id: 'assessments-non-completed-card',  filter: 'nonCompleted'  }
             ];
             
             costMetrics.forEach(({ id, filter }) => {
