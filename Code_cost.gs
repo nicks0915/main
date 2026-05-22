@@ -204,7 +204,9 @@ function createAssessmentsMap(assessments) {
 }
 
 /**
- * Fetch all Stories whose parent is one of the provided Assessment keys
+ * Fetch all Stories whose parent is one of the provided Assessment keys.
+ * Uses POST /rest/api/3/search/jql (same as Work Items tab) to avoid URL
+ * length limits and to use nextPageToken-only pagination.
  */
 function fetchStoriesForAssessments(assessmentKeys) {
   if (!assessmentKeys || assessmentKeys.length === 0) {
@@ -214,15 +216,13 @@ function fetchStoriesForAssessments(assessmentKeys) {
 
   const maxResults = API_SETTINGS.maxResults;
   let allStories = [];
-  let startAt = 0;
   let nextPageToken = null;
-  let total = 0;
   let pageCount = 0;
 
-  // Build JQL query: parent in (KEY1, KEY2, ...) AND type = Story
+  // Same JQL as Work Items: no project/type restriction so GREEN stories are included
   const jql = buildParentInJQLAssessments(assessmentKeys);
-  
-  // Stories need same fields as Assessments, plus 'parent' field
+
+  // Stories need same fields as Assessments parent records, plus 'parent' and costEstimate
   const fields = [
     'issuetype',
     'key',
@@ -236,28 +236,53 @@ function fetchStoriesForAssessments(assessmentKeys) {
     'duedate',
     'assignee',
     'labels',
-    'parent'  // To get parent Assessment key
-  ].join(',');
+    'parent'
+  ];
 
-  const options = getJiraFetchOptions();
+  // POST to avoid URL length limits; POST endpoint uses nextPageToken only (no startAt)
+  const postUrl = `${CONFIG.JIRA.baseUrl}/rest/api/3/search/jql`;
+  const secret = getJiraSecretKey();
+  const headers = {
+    'Authorization': 'Bearer ' + secret,
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'User-Agent': API_SETTINGS.userAgent
+  };
 
   do {
     pageCount++;
-    const url = buildStoriesJiraUrlAssessments(jql, startAt, maxResults, nextPageToken, fields);
     console.log(`=== STORIES PAGINATION CALL ${pageCount} ===`);
-    console.log(`Fetching Stories JIRA data from: ${url}`);
-    
+
+    const body = {
+      jql: jql,
+      fields: fields,
+      maxResults: maxResults
+    };
+    if (nextPageToken) {
+      body.nextPageToken = nextPageToken;
+      console.log(`Using nextPageToken for Stories pagination: ${nextPageToken}`);
+    } else {
+      console.log(`First Stories page — no pagination token`);
+    }
+
+    const options = {
+      method: 'POST',
+      headers: headers,
+      payload: JSON.stringify(body),
+      muteHttpExceptions: true
+    };
+
+    console.log(`Fetching Stories via POST to: ${postUrl}`);
+    console.log(`Stories JQL: ${jql}`);
+
     let response;
     let success = false;
 
-    // Retry logic with exponential backoff
     for (let attempt = 0; attempt <= API_SETTINGS.maxRetries; attempt++) {
       try {
-        response = UrlFetchApp.fetch(url, options);
+        response = UrlFetchApp.fetch(postUrl, options);
         const responseCode = response.getResponseCode();
-        
         console.log(`Stories Attempt ${attempt + 1}: Response code ${responseCode}`);
-
         if (responseCode === 200) {
           success = true;
           break;
@@ -276,39 +301,30 @@ function fetchStoriesForAssessments(assessmentKeys) {
           throw new Error(`JIRA API returned ${responseCode}: ${errorDetails}`);
         }
       } catch (error) {
-        if (attempt === API_SETTINGS.maxRetries) {
-          throw error;
-        }
+        if (attempt === API_SETTINGS.maxRetries) throw error;
         console.log(`Stories Attempt ${attempt + 1} failed: ${error.message}`);
         const delay = Math.pow(2, attempt) * API_SETTINGS.retryDelayBase;
         Utilities.sleep(delay);
       }
     }
 
-    if (!success) {
-      throw new Error('Failed to fetch Stories data after maximum retries');
-    }
+    if (!success) throw new Error('Failed to fetch Stories data after maximum retries');
 
     const data = JSON.parse(response.getContentText());
-    
     console.log(`Stories Response keys: ${Object.keys(data).join(', ')}`);
     console.log(`Stories Issues returned: ${data.issues ? data.issues.length : 0}`);
-
-    if (pageCount === 1) {
-      total = data.total;
-      console.log(`Total Stories issues: ${total}`);
-    }
+    console.log(`Stories Total: ${data.total}`);
 
     if (data.issues && data.issues.length > 0) {
       allStories = allStories.concat(data.issues);
-      console.log(`Fetched ${allStories.length} of ${total} Stories issues`);
+      console.log(`Fetched ${allStories.length} Stories so far`);
     }
 
+    // POST /search/jql uses nextPageToken exclusively (no startAt)
     nextPageToken = data.nextPageToken || null;
     console.log(`Stories Next page token: ${nextPageToken ? nextPageToken : 'None (last page)'}`);
-    
-    startAt += maxResults;
-  } while (nextPageToken || (allStories.length < total && allStories.length > 0));
+
+  } while (nextPageToken !== null);
 
   console.log(`=== STORIES PAGINATION COMPLETE ===`);
   console.log(`Total Stories API calls made: ${pageCount}`);
@@ -318,31 +334,13 @@ function fetchStoriesForAssessments(assessmentKeys) {
 }
 
 /**
- * Build JQL query for Stories with parent in Assessment keys
+ * Build JQL query for Stories with parent in Assessment keys.
+ * No project or type restriction — matches Work Items tab behaviour so
+ * GREEN stories and other child issue types are not excluded.
  */
 function buildParentInJQLAssessments(assessmentKeys) {
-  // Build: project = SODP AND type = Story AND Parent in (KEY1, KEY2, ...) AND status != Cancelled ORDER BY created DESC
   const parentInClause = assessmentKeys.join(', ');
-  return `project = SODP AND type = Story AND Parent in (${parentInClause}) AND status != Cancelled ORDER BY created DESC`;
-}
-
-/**
- * Build JIRA API URL for Stories query (Assessments)
- */
-function buildStoriesJiraUrlAssessments(jql, startAt, maxResults, nextPageToken, fields) {
-  console.log(`Using Stories JQL: ${jql}`);
-  
-  let url = `${CONFIG.JIRA.baseUrl}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&fields=${encodeURIComponent(fields)}&maxResults=${maxResults}`;
-  
-  if (nextPageToken) {
-    url += `&nextPageToken=${encodeURIComponent(nextPageToken)}`;
-    console.log(`Using nextPageToken for Stories pagination: ${nextPageToken}`);
-  } else {
-    url += `&startAt=${startAt}`;
-    console.log(`Using startAt for Stories first request: ${startAt}`);
-  }
-  
-  return url;
+  return `Parent in (${parentInClause}) AND status != Cancelled ORDER BY created DESC`;
 }
 
 /**
