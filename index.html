@@ -3377,10 +3377,11 @@ function updateEpicsMetrics() {
                 const key = item.keyNormalized || item['Work Item Key'] || item['Key'] || '';
                 const costStr = item['customfield_20182'] || item['Gate 2 - Cost Estimate'] || '';
                 const costValue = parseCostValue(costStr);
+                const isCompleted = ASSESSMENTS_COMPLETED_STATUSES.includes((item.statusNormalized || '').toLowerCase());
 
-                // Missing cost: null/empty only — $0 is acceptable
+                // Missing cost: null/empty only — $0 is acceptable — exclude completed items
                 if (!costStr || costStr.trim() === '') {
-                    if (key) groups[groupKey].missingCostItems.push(key);
+                    if (key && !isCompleted) groups[groupKey].missingCostItems.push(key);
                 } else {
                     groups[groupKey].totalCost += costValue;
                 }
@@ -3394,11 +3395,11 @@ function updateEpicsMetrics() {
                 // Missing due dates + long pole date
                 const dueDateStr = item['Due Date'] || '';
                 if (!dueDateStr || dueDateStr.trim() === '') {
-                    if (key) groups[groupKey].missingDueDateItems.push(key);
+                    if (key && !isCompleted) groups[groupKey].missingDueDateItems.push(key);
                 } else {
                     const dueDate = new Date(dueDateStr);
                     if (isNaN(dueDate.getTime())) {
-                        if (key) groups[groupKey].missingDueDateItems.push(key);
+                        if (key && !isCompleted) groups[groupKey].missingDueDateItems.push(key);
                     } else {
                         if (!groups[groupKey].longPoleDate || dueDate > groups[groupKey].longPoleDate) {
                             groups[groupKey].longPoleDate = dueDate;
