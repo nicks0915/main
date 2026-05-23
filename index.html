@@ -6178,10 +6178,10 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             if (timelineData && timelineData.length > 0) {
                 renderTimeline();
             } else {
-                // Try to load from assessments cache first
-                const cached = loadAssessmentsJiraData();
-                if (cached && cached.length > 0) {
-                    timelineData = cached;
+                // Try to load from shared assessments cache
+                const persisted = loadAssessmentsPersistedData();
+                if (persisted && persisted.data && persisted.data.length > 0) {
+                    timelineData = normalizeAssessmentsData(persisted.data);
                     updateTimelineRefreshInfo();
                     renderTimeline();
                 } else {
@@ -6231,11 +6231,10 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             const infoEl = document.getElementById('timeline-jira-refresh-info');
             if (!infoEl) return;
             try {
-                const raw = localStorage.getItem('ASSESSMENTS_JIRA_DATA');
-                if (!raw) return;
-                const parsed = JSON.parse(raw);
-                if (parsed.savedAt) {
-                    infoEl.textContent = 'Last refreshed: ' + new Date(parsed.savedAt).toLocaleString();
+                const persisted = loadAssessmentsPersistedData();
+                if (!persisted) return;
+                if (persisted.timestamp) {
+                    infoEl.textContent = 'Last refreshed: ' + new Date(persisted.timestamp).toLocaleString();
                 }
             } catch (e) { /* ignore */ }
         }
