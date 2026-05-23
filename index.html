@@ -1142,23 +1142,39 @@ const PROJECT_KEY_APPLICATION_MAPPING = {
 };
 
 function resolveApplication(record) {
-    // 1. customfield_30833 — Impacted Application (GREEN board)
-    const impacted = record['customfield_30833'] || record['cf[30833]'] || record['Custom field (Impacted Application)'] || '';
-    if (impacted && impacted.trim()) return impacted.trim();
+    // Unwrap a field value that may be a string, plain object, or array of objects
+    // (JiraCheckboxesField returns [{value: "...", id: "..."}, ...])
+    function extractVal(f) {
+        if (!f) return '';
+        if (Array.isArray(f)) {
+            for (const item of f) {
+                const v = extractVal(item);
+                if (v) return v;
+            }
+            return '';
+        }
+        if (typeof f === 'string') return f.trim();
+        if (f.value) return String(f.value).trim();
+        if (f.name)  return String(f.name).trim();
+        return '';
+    }
+    // 1. customfield_30833 — Impacted Application (GREEN board, JiraCheckboxesField)
+    const impacted = extractVal(record['customfield_30833'])
+                  || extractVal(record['cf[30833]'])
+                  || extractVal(record['Custom field (Impacted Application)'])
+                  || extractVal(record['Impacted Applications']);
+    if (impacted) return impacted;
     // 2. customfield_19182 — Application (SODP)
-    const std = record['customfield_19182'] ||
-                record['Custom field (Application )'] ||
-                record['Application'] ||
-                record['Application '] ||
-                record['Custom field (Application)'] ||
-                record['Custom field (cf[19182])'] ||
-                record['cf[19182]'] ||
-                record['Custom field (cf[19902])'] ||
-                record['customfield_19902'] ||
-                record['cf[19902]'] ||
-                record['Custom field (Application [Dropdown])'] ||
-                record['Application [Dropdown]'] || '';
-    if (std && std.trim()) return std.trim();
+    const std = extractVal(record['customfield_19182'])
+             || extractVal(record['Custom field (Application )'])
+             || extractVal(record['Application'])
+             || extractVal(record['Application '])
+             || extractVal(record['Custom field (Application)'])
+             || extractVal(record['cf[19182]'])
+             || extractVal(record['customfield_19902'])
+             || extractVal(record['cf[19902]'])
+             || extractVal(record['Application [Dropdown]']);
+    if (std) return std;
     // 3. Key-prefix fallback mapping
     const key = record['Work Item Key'] || record['Key'] || record['Issue key'] || '';
     const prefix = key.split('-')[0];

@@ -487,10 +487,17 @@ function transformAssessmentsData(issues) {
       try {
         const extractFieldStr = (f) => {
           if (!f) return '';
+          if (Array.isArray(f)) {
+            for (const item of f) {
+              const v = extractFieldStr(item);
+              if (v) return v;
+            }
+            return '';
+          }
           if (typeof f === 'string') return f.trim();
           if (f.value) return String(f.value).trim();
           if (f.name)  return String(f.name).trim();
-          return String(f).trim();
+          return '';
         };
         applicationValue = extractFieldStr(fields[FIELD_MAPPINGS.impactedApplication])
                         || extractFieldStr(fields[applicationField]);
