@@ -1082,24 +1082,93 @@ let epicsSortConfig = {
     direction: 'asc' // 'asc' or 'desc'
 };
 
+// Project key prefix → Application/Team fallback mapping (from Jira_Cloud_Directory.xlsx H→C)
+const PROJECT_KEY_APPLICATION_MAPPING = {
+  'AESTVA1':    'TV Activation (OPUS)',
+  'ATCC':       'FUSE',
+  'ATM':        'FUSE',
+  'BCOMM':      'Netcracker Catalog',
+  'BEAN':       'Cool Beans',
+  'BEES':       'CASA',
+  'BFF2':       'My T App',
+  'BILLING':    'CES',
+  'BLGNXT':     'Bill Genetix',
+  'BYOD':       'FUSE',
+  'C3':         'C30C',
+  'CAF':        'Credit and Fraud Risk Management',
+  'CBSS':       'NC WLS Cloud BSS squad',
+  'CCSRC':      'Enterprise Architechture',
+  'CES':        'Billing Team',
+  'CKPCRD':     'Calculations, Accounts Receivables, Payments and Settlements',
+  'CSEG':       'Channel Sales Experience',
+  'CUS':        'Channel Dashboard',
+  'CUXMFE':     'C3X',
+  'DEV5BBA':    'SFDC - Cart',
+  'DJR':        'Dope Jackalopes',
+  'ENTACCTAPI': 'Billing Team',
+  'EOM':        'Offer Management',
+  'EPSB':       'EPS - Enterprise Payment Systems',
+  'FARM':       'Facilities and Resource Management',
+  'FAST':       'Fast & Furious',
+  'GLOB':       'My TELUS Navigation',
+  'GSS':        'DC Comics',
+  'GSST':       'Marvel',
+  'GXY':        'Checkout',
+  'HDDP':       'Customer Data and Service Assurance',
+  'HFPF':       'Huffle Puffins',
+  'HOMERUN':    'Neo Titans',
+  'IFRS':       'IFRS',
+  'KB2GCP':     'DBE Platforms',
+  'KD':         'DBE Platforms',
+  'MERAPI':     'Enterprise TMF APIs',
+  'MES':        'Monetization Enablement',
+  'MP':         'Enterprise Architechture',
+  'NCBSS':      'NC Cloud',
+  'NCCS':       'National Compensation',
+  'OF':         'NC Cloud',
+  'PFR':        'Precision Fraud',
+  'PXD':        'Experience Design',
+  'QSP2':       'Concord',
+  'SAQ':        'Service Access Qualification',
+  'SM':         'Billing Team',
+  'SMRPN':      'CASA',
+  'SMS':        'My T App',
+  'SNET':       'Spatial Net',
+  'SVN':        'CASA',
+  'TBSDT':      'SFDC',
+  'TECH':       'CASA',
+  'TRAN':       'Mediation',
+  'VOGS':       'FUSE'
+};
+
+function resolveApplication(record) {
+    // 1. customfield_30833 — Impacted Application (GREEN board)
+    const impacted = record['customfield_30833'] || record['cf[30833]'] || record['Custom field (Impacted Application)'] || '';
+    if (impacted && impacted.trim()) return impacted.trim();
+    // 2. customfield_19182 — Application (SODP)
+    const std = record['customfield_19182'] ||
+                record['Custom field (Application )'] ||
+                record['Application'] ||
+                record['Application '] ||
+                record['Custom field (Application)'] ||
+                record['Custom field (cf[19182])'] ||
+                record['cf[19182]'] ||
+                record['Custom field (cf[19902])'] ||
+                record['customfield_19902'] ||
+                record['cf[19902]'] ||
+                record['Custom field (Application [Dropdown])'] ||
+                record['Application [Dropdown]'] || '';
+    if (std && std.trim()) return std.trim();
+    // 3. Key-prefix fallback mapping
+    const key = record['Work Item Key'] || record['Key'] || record['Issue key'] || '';
+    const prefix = key.split('-')[0];
+    return PROJECT_KEY_APPLICATION_MAPPING[prefix] || '';
+}
+
 // Helper: Normalize Application field for Epics data
 function normalizeEpicsData(data) {
     return data.map(record => {
-        // Normalize Application
-        const app =
-            record['customfield_19182'] ||
-            record['Custom field (Application )'] ||
-            record['Application'] ||
-            record['Application '] ||
-            record['Custom field (Application)'] ||
-            record['Custom field (cf[19182])'] ||
-            record['cf[19182]'] ||
-            record['Custom field (cf[19902])'] ||
-            record['customfield_19902'] ||
-            record['cf[19902]'] ||
-            record['Custom field (Application [Dropdown])'] ||
-            record['Application [Dropdown]'] ||
-            '';
+        const app = resolveApplication(record);
 
         // Normalize Issue Type
         const issueType =
@@ -2401,7 +2470,7 @@ function updateEpicsMetrics() {
 
         function normalizeAssessmentsData(data) {
             return data.map(record => {
-                const app = record['customfield_19182'] || record['Custom field (Application )'] || record['Application'] || record['Application '] || '';
+                const app = resolveApplication(record);
                 const issueType = record['Work Type'] || record['Issue Type'] || record['Type'] || '';
                 const key = record['Work Item Key'] || record['Key'] || record['Issue key'] || '';
                 const status = record['Status'] || '';

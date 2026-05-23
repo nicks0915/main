@@ -90,7 +90,8 @@
     'summary',                      // Summary
     FIELD_MAPPINGS.health,          // Health (customfield_19357)
     FIELD_MAPPINGS.statusDetails,   // Status Details/Risk (customfield_19361)
-    FIELD_MAPPINGS.application,     // Application (customfield_19182)
+    FIELD_MAPPINGS.application,          // Application (customfield_19182) — SODP
+    FIELD_MAPPINGS.impactedApplication,  // Impacted Application (customfield_30833) — GREEN
     'status',                       // Status
     FIELD_MAPPINGS.startDate,       // Start Date (customfield_21750)
     'duedate',                      // Due Date
@@ -231,6 +232,7 @@
       'parent',
       'labels',
       FIELD_MAPPINGS.application,
+      FIELD_MAPPINGS.impactedApplication,
       FIELD_MAPPINGS.health,
       FIELD_MAPPINGS.statusDetails,
       FIELD_MAPPINGS.startDate
@@ -483,17 +485,24 @@
           console.warn(`Error extracting status details for ${issue.key}:`, error);
         }
         
-        // Application value extraction
+        // Application value extraction — 3-step priority:
+        // 1. customfield_30833 (Impacted Application — GREEN board)
+        // 2. customfield_19182 (Application — SODP)
+        // 3. Project key prefix mapping (fallback from PROJECT_KEY_APPLICATION_MAPPING)
         let applicationValue = '';
         try {
-          if (fields[applicationField]) {
-            if (typeof fields[applicationField] === 'string') {
-              applicationValue = fields[applicationField];
-            } else if (fields[applicationField].value) {
-              applicationValue = fields[applicationField].value;
-            } else {
-              applicationValue = String(fields[applicationField]);
-            }
+          const extractFieldStr = (f) => {
+            if (!f) return '';
+            if (typeof f === 'string') return f.trim();
+            if (f.value) return String(f.value).trim();
+            if (f.name)  return String(f.name).trim();
+            return String(f).trim();
+          };
+          applicationValue = extractFieldStr(fields[FIELD_MAPPINGS.impactedApplication])
+                          || extractFieldStr(fields[applicationField]);
+          if (!applicationValue) {
+            const prefix = issue.key ? issue.key.split('-')[0] : '';
+            applicationValue = PROJECT_KEY_APPLICATION_MAPPING[prefix] || '';
           }
         } catch (error) {
           console.warn(`Error extracting application for ${issue.key}:`, error);

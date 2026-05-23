@@ -71,7 +71,8 @@ const FIELD_MAPPINGS = {
   costEstimate: 'customfield_17265',    // Gate 2 - Cost Estimate (cf[17265])
   
   // Common fields
-  startDate: 'customfield_21750'        // Start Date (cf[21750])
+  startDate: 'customfield_21750',       // Start Date (cf[21750])
+  impactedApplication: 'customfield_30833' // Impacted Application (cf[30833]) — GREEN board
 };
 
 const DIRECTOR_TEAM_MAPPING = {
@@ -209,6 +210,68 @@ const DIRECTOR_TEAM_MAPPING = {
 
   // Dinesh M
   'NBA MFE': { name: 'Dinesh M', displayName: 'Dinesh M' }
+};
+
+// Maps JIRA project key prefix → Application/Team name.
+// Used as a last-resort fallback when neither customfield_30833 nor
+// customfield_19182 returns an application value.
+// Source: Jira_Cloud_Directory.xlsx — columns H (Jira Issue Key) → C (Team)
+const PROJECT_KEY_APPLICATION_MAPPING = {
+  'AESTVA1':    'TV Activation (OPUS)',
+  'ATCC':       'FUSE',
+  'ATM':        'FUSE',
+  'BCOMM':      'Netcracker Catalog',
+  'BEAN':       'Cool Beans',
+  'BEES':       'CASA',
+  'BFF2':       'My T App',
+  'BILLING':    'CES',
+  'BLGNXT':     'Bill Genetix',
+  'BYOD':       'FUSE',
+  'C3':         'C30C',
+  'CAF':        'Credit and Fraud Risk Management',
+  'CBSS':       'NC WLS Cloud BSS squad',
+  'CCSRC':      'Enterprise Architechture',
+  'CES':        'Billing Team',
+  'CKPCRD':     'Calculations, Accounts Receivables, Payments and Settlements',
+  'CSEG':       'Channel Sales Experience',
+  'CUS':        'Channel Dashboard',
+  'CUXMFE':     'C3X',
+  'DEV5BBA':    'SFDC - Cart',
+  'DJR':        'Dope Jackalopes',
+  'ENTACCTAPI': 'Billing Team',
+  'EOM':        'Offer Management',
+  'EPSB':       'EPS - Enterprise Payment Systems',
+  'FARM':       'Facilities and Resource Management',
+  'FAST':       'Fast & Furious',
+  'GLOB':       'My TELUS Navigation',
+  'GSS':        'DC Comics',
+  'GSST':       'Marvel',
+  'GXY':        'Checkout',
+  'HDDP':       'Customer Data and Service Assurance',
+  'HFPF':       'Huffle Puffins',
+  'HOMERUN':    'Neo Titans',
+  'IFRS':       'IFRS',
+  'KB2GCP':     'DBE Platforms',
+  'KD':         'DBE Platforms',
+  'MERAPI':     'Enterprise TMF APIs',
+  'MES':        'Monetization Enablement',
+  'MP':         'Enterprise Architechture',
+  'NCBSS':      'NC Cloud',
+  'NCCS':       'National Compensation',
+  'OF':         'NC Cloud',
+  'PFR':        'Precision Fraud',
+  'PXD':        'Experience Design',
+  'QSP2':       'Concord',
+  'SAQ':        'Service Access Qualification',
+  'SM':         'Billing Team',
+  'SMRPN':      'CASA',
+  'SMS':        'My T App',
+  'SNET':       'Spatial Net',
+  'SVN':        'CASA',
+  'TBSDT':      'SFDC',
+  'TECH':       'CASA',
+  'TRAN':       'Mediation',
+  'VOGS':       'FUSE'
 };
 
 const API_SETTINGS = {
