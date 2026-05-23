@@ -1302,6 +1302,32 @@ function resolveApplication(record) {
     return PROJECT_KEY_APPLICATION_MAPPING[prefix] || '';
 }
 
+// Returns ALL team values for a record (customfield_30833 can be multi-value for Capabilities).
+// Each raw value is mapped through APPLICATION_TO_TEAM_MAPPING. Falls back to resolveApplication().
+function resolveAllTeams(record) {
+    function extractAllVals(f) {
+        if (!f) return [];
+        if (Array.isArray(f)) return f.flatMap(item => extractAllVals(item));
+        if (typeof f === 'string') { const v = f.trim(); return v ? [v] : []; }
+        if (f.value) { const v = String(f.value).trim(); return v ? [v] : []; }
+        if (f.name)  { const v = String(f.name).trim();  return v ? [v] : []; }
+        return [];
+    }
+    let rawVals = [];
+    for (const alias of ['customfield_30833', 'cf[30833]', 'Custom field (Impacted Application)', 'Impacted Applications']) {
+        rawVals = extractAllVals(record[alias]);
+        if (rawVals.length > 0) break;
+    }
+    if (rawVals.length === 0) {
+        const single = resolveApplication(record);
+        return single ? [single] : [];
+    }
+    return rawVals.map(v => {
+        if (v in APPLICATION_TO_TEAM_MAPPING) return APPLICATION_TO_TEAM_MAPPING[v] || v;
+        return v;
+    }).filter(Boolean);
+}
+
 // Helper: Normalize Application field for Epics data
 function normalizeEpicsData(data) {
     return data.map(record => {
@@ -2608,6 +2634,7 @@ function updateEpicsMetrics() {
         function normalizeAssessmentsData(data) {
             return data.map(record => {
                 const app = resolveApplication(record);
+                const allTeams = resolveAllTeams(record);
                 const issueType = record['Work Type'] || record['Issue Type'] || record['Type'] || '';
                 const key = record['Work Item Key'] || record['Key'] || record['Issue key'] || '';
                 const status = record['Status'] || '';
@@ -2615,6 +2642,7 @@ function updateEpicsMetrics() {
                 return {
                     ...record,
                     applicationNormalized: app,
+                    teamsAll: allTeams,
                     issueTypeNormalized: (issueType || '').trim(),
                     keyNormalized: (key || '').trim(),
                     statusNormalized: (status || '').trim(),
@@ -2948,8 +2976,10 @@ function updateEpicsMetrics() {
                 summaryCell.style.overflow = 'hidden';
                 summaryCell.style.textOverflow = 'ellipsis';
                 summaryCell.style.whiteSpace = 'nowrap';
-                row.insertCell().textContent = record.applicationNormalized || '';
-                
+                row.insertCell().textContent = (record.teamsAll && record.teamsAll.length > 0)
+                    ? record.teamsAll.join(', ')
+                    : (record.applicationNormalized || '');
+
                 // Gate 2 - Cost Estimate
                 const costEstimateCell = row.insertCell();
                 const costEstimateValue = record['customfield_20182'] || record['Gate 2 - Cost Estimate'] || '';
@@ -3322,166 +3352,129 @@ function updateEpicsMetrics() {
         }
         
         function groupAssessmentsByApplication() {
+            const OTHERS = '(Others)';
             const groups = {};
-            
+
             assessmentsFilteredData.forEach(item => {
-                const app = item.applicationNormalized || 'Unknown';
-                
-                // Skip "Unknown" applications
-                if (app === 'Unknown' || !app || app.trim() === '') {
-                    return;
-                }
-                
-                if (!groups[app]) {
-                    groups[app] = {
-                        name: app,
-                        epics: [],
-                        stories: [],
-                        storyKeys: [],
+                const issueType = (item.issueTypeNormalized || '').toLowerCase();
+                // Team view shows only epics and stories — capabilities are excluded
+                if (issueType !== 'epic' && issueType !== 'story') return;
+
+                const app = item.applicationNormalized || '';
+                const groupKey = (app && app.trim()) ? app : OTHERS;
+
+                if (!groups[groupKey]) {
+                    groups[groupKey] = {
+                        name: groupKey,
                         totalCost: 0,
-                        missingCostCount: 0,
                         assignees: new Set(),
-                        missingDueDatesCount: 0,
+                        missingCostItems: [],    // keys of epics/stories with no cost value
+                        missingDueDateItems: [], // keys of epics/stories with no due date
                         longPoleDate: null
                     };
                 }
-                
-                const issueType = (item.issueTypeNormalized || '').toLowerCase();
+
+                const key = item.keyNormalized || item['Work Item Key'] || item['Key'] || '';
                 const costStr = item['customfield_20182'] || item['Gate 2 - Cost Estimate'] || '';
                 const costValue = parseCostValue(costStr);
-                
-                if (issueType === 'epic') {
-                    groups[app].epics.push(item);
-                } else if (issueType === 'story') {
-                    groups[app].stories.push(item);
-                    // Collect story Keys for hyperlinks
-                    const key = item.keyNormalized || item['Work Item Key'] || item['Key'] || '';
-                    if (key) {
-                        groups[app].storyKeys.push(key);
-                    }
-                }
-                
-                // Count items with missing cost
+
+                // Missing cost: null/empty only — $0 is acceptable
                 if (!costStr || costStr.trim() === '') {
-                    groups[app].missingCostCount++;
+                    if (key) groups[groupKey].missingCostItems.push(key);
                 } else {
-                    groups[app].totalCost += costValue;
+                    groups[groupKey].totalCost += costValue;
                 }
-                
-                // Collect unique assignees
+
+                // Assignees
                 const assignee = (item['Assignee'] || '').trim();
                 if (assignee && assignee.toLowerCase() !== 'unassigned') {
-                    groups[app].assignees.add(assignee);
+                    groups[groupKey].assignees.add(assignee);
                 }
-                
-                // Count missing due dates
+
+                // Missing due dates + long pole date
                 const dueDateStr = item['Due Date'] || '';
                 if (!dueDateStr || dueDateStr.trim() === '') {
-                    groups[app].missingDueDatesCount++;
+                    if (key) groups[groupKey].missingDueDateItems.push(key);
                 } else {
                     const dueDate = new Date(dueDateStr);
                     if (isNaN(dueDate.getTime())) {
-                        groups[app].missingDueDatesCount++;
+                        if (key) groups[groupKey].missingDueDateItems.push(key);
                     } else {
-                        // Track long pole date (latest due date)
-                        if (!groups[app].longPoleDate || dueDate > groups[app].longPoleDate) {
-                            groups[app].longPoleDate = dueDate;
+                        if (!groups[groupKey].longPoleDate || dueDate > groups[groupKey].longPoleDate) {
+                            groups[groupKey].longPoleDate = dueDate;
                         }
                     }
                 }
             });
-            
-            // Convert to array and sort by application name alphabetically
-            return Object.values(groups).sort((a, b) => a.name.localeCompare(b.name));
+
+            // Sort alphabetically; push (Others) to the end
+            return Object.values(groups).sort((a, b) => {
+                if (a.name === OTHERS) return 1;
+                if (b.name === OTHERS) return -1;
+                return a.name.localeCompare(b.name);
+            });
         }
         
         function createApplicationTable(applicationGroups, container) {
-            // Create table wrapper
+            const JIRA_BASE = 'https://telus-cio.atlassian.net/browse/';
+
+            function makeKeyLinks(keys) {
+                if (!keys || keys.length === 0) return '<span style="color:#999;">None</span>';
+                return keys.map(k =>
+                    `<a href="${JIRA_BASE}${k}" target="_blank" style="color:#0066cc;text-decoration:none;white-space:nowrap;">${k}</a>`
+                ).join('<br>');
+            }
+
             const tableWrapper = document.createElement('div');
-            tableWrapper.style.cssText = `
-                background: white;
-                border-radius: 10px;
-                overflow: hidden;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            `;
-            
-            // Create table
+            tableWrapper.style.cssText = 'background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);';
+
             const table = document.createElement('table');
-            table.style.cssText = `
-                width: 100%;
-                border-collapse: collapse;
-            `;
-            
-            // Create table header
+            table.style.cssText = 'width:100%;border-collapse:collapse;';
+
             const thead = document.createElement('thead');
             thead.innerHTML = `
-                <tr style="background: #f8f9fa;">
-                    <th style="padding: 15px; text-align: left; font-weight: 600; border-bottom: 2px solid #e1e5e9;">Team Name</th>
-                    <th style="padding: 15px; text-align: left; font-weight: 600; border-bottom: 2px solid #e1e5e9;">Assignee(s)</th>
-                    <th style="padding: 15px; text-align: left; font-weight: 600; border-bottom: 2px solid #e1e5e9;">Stories</th>
-                    <th style="padding: 15px; text-align: center; font-weight: 600; border-bottom: 2px solid #e1e5e9;">Story Count</th>
-                    <th style="padding: 15px; text-align: center; font-weight: 600; border-bottom: 2px solid #e1e5e9;">Missing Cost</th>
-                    <th style="padding: 15px; text-align: center; font-weight: 600; border-bottom: 2px solid #e1e5e9;">Missing Due Dates</th>
-                    <th style="padding: 15px; text-align: center; font-weight: 600; border-bottom: 2px solid #e1e5e9;">Latest Team End Date</th>
-                    <th style="padding: 15px; text-align: right; font-weight: 600; border-bottom: 2px solid #e1e5e9;">Total Cost</th>
+                <tr style="background:#f8f9fa;">
+                    <th style="padding:15px;text-align:left;font-weight:600;border-bottom:2px solid #e1e5e9;">Team Name</th>
+                    <th style="padding:15px;text-align:left;font-weight:600;border-bottom:2px solid #e1e5e9;">Assignee(s)</th>
+                    <th style="padding:15px;text-align:left;font-weight:600;border-bottom:2px solid #e1e5e9;">Missing Cost</th>
+                    <th style="padding:15px;text-align:left;font-weight:600;border-bottom:2px solid #e1e5e9;">Missing Due Dates</th>
+                    <th style="padding:15px;text-align:center;font-weight:600;border-bottom:2px solid #e1e5e9;">Latest Team End Date</th>
+                    <th style="padding:15px;text-align:right;font-weight:600;border-bottom:2px solid #e1e5e9;">Total Cost</th>
                 </tr>
             `;
             table.appendChild(thead);
-            
-            // Create table body
+
             const tbody = document.createElement('tbody');
-            
-            applicationGroups.forEach((appGroup, index) => {
+
+            applicationGroups.forEach(appGroup => {
                 const row = document.createElement('tr');
-                row.style.cssText = `
-                    border-bottom: 1px solid #f0f0f0;
-                    transition: background-color 0.2s ease;
-                `;
-                
-                // Add hover effect
-                row.addEventListener('mouseenter', () => {
-                    row.style.backgroundColor = '#f8f9fa';
-                });
-                row.addEventListener('mouseleave', () => {
-                    row.style.backgroundColor = '';
-                });
-                
-                // Format assignees
-                const assigneesList = Array.from(appGroup.assignees).sort();
-                const assigneesDisplay = assigneesList.length > 0 ? assigneesList.join(', ') : 'Unassigned';
-                
-                // Format story Keys as hyperlinks
-                let storyKeysDisplay = '';
-                if (appGroup.storyKeys.length > 0) {
-                    const keyLinks = appGroup.storyKeys.map(key => {
-                        return `<a href="https://telus-cio.atlassian.net/browse/${key}" target="_blank" style="color: #0066cc; text-decoration: none;">${key}</a>`;
-                    });
-                    storyKeysDisplay = keyLinks.join(', ');
-                } else {
-                    storyKeysDisplay = 'No Stories';
-                }
-                
-                // Format long pole date
+                row.style.cssText = 'border-bottom:1px solid #f0f0f0;transition:background-color 0.2s ease;';
+                row.addEventListener('mouseenter', () => { row.style.backgroundColor = '#f8f9fa'; });
+                row.addEventListener('mouseleave', () => { row.style.backgroundColor = ''; });
+
+                const assigneesDisplay = Array.from(appGroup.assignees).sort().join(', ') || 'Unassigned';
+
                 let longPoleDateDisplay = 'No Due Date';
                 if (appGroup.longPoleDate) {
-                    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                    longPoleDateDisplay = appGroup.longPoleDate.toLocaleDateString('en-US', options);
+                    longPoleDateDisplay = appGroup.longPoleDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                 }
-                
+
+                const isOthers = appGroup.name === '(Others)';
+                const teamNameStyle = isOthers ? 'color:#999;font-style:italic;' : 'color:#333;font-weight:500;';
+
+                const tdBase = 'padding:12px;vertical-align:top;';
                 row.innerHTML = `
-                    <td style="padding: 12px; font-weight: 500; color: #333;">${appGroup.name}</td>
-                    <td style="padding: 12px; color: #555; font-size: 0.9rem;">${assigneesDisplay}</td>
-                    <td style="padding: 12px; color: #555; font-size: 0.9rem;">${storyKeysDisplay}</td>
-                    <td style="padding: 12px; text-align: center; color: #667eea; font-weight: 600;">${appGroup.stories.length}</td>
-                    <td style="padding: 12px; text-align: center; color: ${appGroup.missingCostCount > 0 ? '#dc3545' : '#28a745'}; font-weight: 600;">${appGroup.missingCostCount}</td>
-                    <td style="padding: 12px; text-align: center; color: ${appGroup.missingDueDatesCount > 0 ? '#fd7e14' : '#28a745'}; font-weight: 600;">${appGroup.missingDueDatesCount}</td>
-                    <td style="padding: 12px; text-align: center; color: #333; font-weight: 500;">${longPoleDateDisplay}</td>
-                    <td style="padding: 12px; text-align: right; color: #28a745; font-weight: 600; font-size: 1.1rem;">${formatCostValue(appGroup.totalCost)}</td>
+                    <td style="${tdBase}font-weight:500;${teamNameStyle}">${appGroup.name}</td>
+                    <td style="${tdBase}color:#555;font-size:0.9rem;">${assigneesDisplay}</td>
+                    <td style="${tdBase}font-size:0.85rem;line-height:1.8;">${makeKeyLinks(appGroup.missingCostItems)}</td>
+                    <td style="${tdBase}font-size:0.85rem;line-height:1.8;">${makeKeyLinks(appGroup.missingDueDateItems)}</td>
+                    <td style="${tdBase}text-align:center;color:#333;font-weight:500;">${longPoleDateDisplay}</td>
+                    <td style="${tdBase}text-align:right;color:#28a745;font-weight:600;font-size:1.1rem;">${formatCostValue(appGroup.totalCost)}</td>
                 `;
-                
+
                 tbody.appendChild(row);
             });
-            
+
             table.appendChild(tbody);
             tableWrapper.appendChild(table);
             container.appendChild(tableWrapper);
