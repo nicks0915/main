@@ -238,6 +238,7 @@
                 <button class="header-nav-btn project-links-tab active" id="project-links-btn" onclick="switchView('project-links')" style="pointer-events:auto;opacity:1;">🔗 Project Links</button>
 <button class="header-nav-btn epics-tab" id="epics-btn" onclick="switchView('epics')">🗂️ Work Items</button>
 <button class="header-nav-btn assessments-tab" id="assessments-btn" onclick="switchView('assessments')">💰 Assessments</button>
+<button class="header-nav-btn timeline-tab" id="timeline-btn" onclick="switchView('timeline')">📅 Timeline</button>
 <button class="header-nav-btn defects-tab" id="defects-btn" onclick="switchView('defects')">🐛 Defects</button>
 <button class="header-nav-btn testing-status-tab" id="testing-status-btn" onclick="switchView('testing-status')" style="pointer-events:none;opacity:0.5;">
 <svg width="1.5em" height="1.5em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-label="Testing Status Icon" style="vertical-align:middle;margin-right:0.4em;object-fit:contain;display:inline-block;">
@@ -482,11 +483,6 @@
             <div class="table-header">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <h3 style="margin: 0;">Work Items <span class="clipboard-icon" id="assessments-clipboard-report-btn" onclick="openAssessmentsReportModal()" title="Generate Management Report">📋</span></h3>
-                    <div class="view-toggle-buttons">
-                        <button class="view-toggle-btn active" id="assessments-list-view-btn" onclick="switchAssessmentsView('list')">📋 List</button>
-                        <button class="view-toggle-btn" id="assessments-application-view-btn" onclick="switchAssessmentsView('application')">📊 Team</button>
-                        <button class="view-toggle-btn" id="assessments-export-sheet-btn" onclick="exportAssessmentsToGoogleSheet()">📤 Export to Sheet</button>
-                    </div>
                 </div>
                 <div class="table-controls">
                     <div style="display: flex; flex-direction: column; gap: 5px;">
@@ -553,14 +549,35 @@
             </table>
         </div>
         
-        <!-- Application View Container -->
-        <div class="custom-timeline-container" id="assessments-application-view">
-            <div id="assessments-application-svg-container"></div>
-        </div>
     </div>
 </div>
             </div>
         </div>
+
+        <!-- Timeline Tab Content -->
+<div class="tab-content" id="timeline-content" style="min-height:400px;">
+    <div class="container">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div>
+                <h3 style="margin:0;">Team Timeline</h3>
+                <span id="timeline-jira-refresh-info" style="font-size:0.85rem;color:#666;font-style:italic;"></span>
+            </div>
+            <button class="btn btn-primary" id="refresh-timeline">🔄 Refresh from JIRA</button>
+        </div>
+
+        <!-- Gantt Chart -->
+        <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.08);margin-bottom:24px;">
+            <h4 style="margin:0 0 12px 0;color:#333;">Pending Items by Team</h4>
+            <div id="timeline-gantt-container" style="overflow-x:auto;min-height:200px;"></div>
+        </div>
+
+        <!-- Team Table -->
+        <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+            <h4 style="margin:0 0 12px 0;color:#333;">Team Summary</h4>
+            <div id="timeline-table-container"></div>
+        </div>
+    </div>
+</div>
 
         <!-- Epics Tab Content -->
 <div class="tab-content" id="epics-content" style="min-height:400px;">
@@ -2656,6 +2673,10 @@ function updateEpicsMetrics() {
             if (refreshAssessmentsBtn) {
                 refreshAssessmentsBtn.addEventListener('click', refreshAssessmentsFromJira);
             }
+            const refreshTimelineBtn = document.getElementById('refresh-timeline');
+            if (refreshTimelineBtn) {
+                refreshTimelineBtn.addEventListener('click', refreshTimelineFromJira);
+            }
             setupAssessmentsFiltersAndSearch();
             
             // Add sorting event listeners for Assessments table
@@ -2794,12 +2815,6 @@ function updateEpicsMetrics() {
         const ASSESSMENTS_COMPLETED_STATUSES = ['done', 'obsolete', 'ready for testing', 'ready to test', 'cio ready'];
 
         function applyAssessmentsFilters() {
-            // If application view is active, switch to list view so the user sees filtered results
-            const appView = document.getElementById('assessments-application-view');
-            if (appView && appView.classList.contains('active')) {
-                switchAssessmentsView('list');
-            }
-
             assessmentsFilteredData = assessmentsData.filter(record => {
                 if (assessmentsFilters.issueTypes.length > 0 && !assessmentsFilters.issueTypes.includes(record.issueTypeNormalized || '')) return false;
                 if (assessmentsFilters.applications.length > 0 && !assessmentsFilters.applications.includes(record.applicationNormalized || '')) return false;
@@ -3247,56 +3262,10 @@ function updateEpicsMetrics() {
         }
 
         // ===== ASSESSMENTS VIEW SWITCHING =====
-        
+        // Team view has moved to the Timeline tab — Assessments is list-only.
         function switchAssessmentsView(viewType) {
             const listView = document.getElementById('assessments-list-view');
-            const applicationView = document.getElementById('assessments-application-view');
-            const listBtn = document.getElementById('assessments-list-view-btn');
-            const applicationBtn = document.getElementById('assessments-application-view-btn');
-            
-            // Remove all active states
-            listView.style.display = 'none';
-            applicationView.classList.remove('active');
-            listBtn.classList.remove('active');
-            applicationBtn.classList.remove('active');
-            
-            // Activate selected view
-            if (viewType === 'list') {
-                listView.style.display = 'block';
-                listBtn.classList.add('active');
-                
-                // Enable all filters in List view
-                enableAssessmentsFilter('assessment-issue-type');
-                enableAssessmentsFilter('assessment-status');
-            } else if (viewType === 'application') {
-                applicationBtn.classList.add('active');
-
-                // Disable Issue Type and Status filters in Application view
-                disableAssessmentsFilter('assessment-issue-type');
-                disableAssessmentsFilter('assessment-status');
-
-                // Clear Issue Type and Status selections
-                assessmentsFilters.issueTypes = [];
-                assessmentsFilters.statuses = [];
-
-                // Uncheck all Issue Type and Status checkboxes
-                document.querySelectorAll('#assessment-issue-type-options input[type="checkbox"]').forEach(cb => cb.checked = false);
-                document.querySelectorAll('#assessment-status-options input[type="checkbox"]').forEach(cb => cb.checked = false);
-
-                // Update button text
-                updateAssessmentsButtonText('assessment-issue-type', [], 'All Issue Types');
-                updateAssessmentsButtonText('assessment-status', [], 'All Statuses');
-
-                // Re-apply filters with cleared Issue Type and Status
-                applyAssessmentsFilters();
-
-                // Show application view AFTER filters applied (must be after so applyAssessmentsFilters
-                // auto-switch-to-list logic doesn't fire on this intentional transition)
-                applicationView.classList.add('active');
-
-                // Render application cost view when this view is activated
-                renderApplicationCostView();
-            }
+            if (listView) listView.style.display = 'block';
         }
         
         // Disable a specific Assessments filter
@@ -3351,11 +3320,12 @@ function updateEpicsMetrics() {
             createApplicationTable(applicationGroups, container);
         }
         
-        function groupAssessmentsByApplication() {
+        function groupAssessmentsByApplication(sourceData) {
+            const data = sourceData || assessmentsFilteredData;
             const OTHERS = '(Others)';
             const groups = {};
 
-            assessmentsFilteredData.forEach(item => {
+            data.forEach(item => {
                 const issueType = (item.issueTypeNormalized || '').toLowerCase();
                 // Team view shows only epics and stories — capabilities are excluded
                 if (issueType !== 'epic' && issueType !== 'story') return;
@@ -6198,6 +6168,206 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             }
         }
 
+        // ─── TIMELINE TAB ──────────────────────────────────────────────────────────
+
+        let timelineData = null; // normalized records loaded for timeline
+
+        function initTimelineTab() {
+            if (timelineData && timelineData.length > 0) {
+                renderTimeline();
+            } else {
+                // Try to load from assessments cache first
+                const cached = loadAssessmentsJiraData();
+                if (cached && cached.length > 0) {
+                    timelineData = cached;
+                    updateTimelineRefreshInfo();
+                    renderTimeline();
+                } else {
+                    document.getElementById('timeline-gantt-container').innerHTML =
+                        '<div style="text-align:center;padding:60px;color:#666;">Click <strong>Refresh from JIRA</strong> to load timeline data.</div>';
+                    document.getElementById('timeline-table-container').innerHTML = '';
+                }
+            }
+        }
+
+        function refreshTimelineFromJira() {
+            const refreshBtn = document.getElementById('refresh-timeline');
+            const originalText = refreshBtn.textContent;
+            refreshBtn.textContent = '🔄 Loading...';
+            refreshBtn.disabled = true;
+            google.script.run
+                .withSuccessHandler(function(csvData) {
+                    try {
+                        Papa.parse(csvData, {
+                            header: true,
+                            skipEmptyLines: true,
+                            complete: function(results) {
+                                timelineData = normalizeAssessmentsData(results.data);
+                                saveAssessmentsJiraData(timelineData); // shared cache with Assessments
+                                updateTimelineRefreshInfo();
+                                renderTimeline();
+                                refreshBtn.textContent = originalText;
+                                refreshBtn.disabled = false;
+                                alert('Successfully refreshed Timeline from JIRA! Loaded ' + timelineData.length + ' records.');
+                            }
+                        });
+                    } catch (e) {
+                        refreshBtn.textContent = originalText;
+                        refreshBtn.disabled = false;
+                        alert('Error processing Timeline data: ' + e.message);
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    refreshBtn.textContent = originalText;
+                    refreshBtn.disabled = false;
+                    alert('Failed to fetch Timeline data from JIRA: ' + error.message);
+                })
+                .fetchTimelineDataAsCsv();
+        }
+
+        function updateTimelineRefreshInfo() {
+            const infoEl = document.getElementById('timeline-jira-refresh-info');
+            if (!infoEl) return;
+            try {
+                const raw = localStorage.getItem('ASSESSMENTS_JIRA_DATA');
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (parsed.savedAt) {
+                    infoEl.textContent = 'Last refreshed: ' + new Date(parsed.savedAt).toLocaleString();
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        function renderTimeline() {
+            if (!timelineData || timelineData.length === 0) return;
+            const groups = groupAssessmentsByApplication(timelineData);
+            renderTimelineGantt(groups);
+            renderTimelineTeamTable(groups);
+        }
+
+        function renderTimelineTeamTable(groups) {
+            const container = document.getElementById('timeline-table-container');
+            container.innerHTML = '';
+            if (!groups || groups.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">No team data available.</div>';
+                return;
+            }
+            createApplicationTable(groups, container);
+        }
+
+        function renderTimelineGantt(groups) {
+            const container = document.getElementById('timeline-gantt-container');
+            container.innerHTML = '';
+
+            // Collect all pending items with due dates
+            const allItems = [];
+            groups.forEach(group => {
+                group.pendingItems.forEach(({ key, dateLabel }) => {
+                    allItems.push({ key, team: group.name, date: new Date(dateLabel) });
+                });
+            });
+
+            if (allItems.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">No pending items with due dates found.</div>';
+                return;
+            }
+
+            // Date range — add padding on each side
+            const minDate = new Date(Math.min(...allItems.map(d => d.date)));
+            const maxDate = new Date(Math.max(...allItems.map(d => d.date)));
+            minDate.setDate(1); // snap to start of month
+            maxDate.setMonth(maxDate.getMonth() + 1, 1); // snap to start of next month
+
+            const teamsInOrder = groups.map(g => g.name);
+
+            const margin = { top: 50, right: 30, bottom: 30, left: 220 };
+            const rowHeight = 50;
+            const width = Math.max(container.clientWidth || 900, 700) - margin.left - margin.right;
+            const height = teamsInOrder.length * rowHeight;
+
+            const xScale = d3.scaleTime().domain([minDate, maxDate]).range([0, width]);
+            const yScale = d3.scaleBand().domain(teamsInOrder).range([0, height]).padding(0.2);
+
+            const svg = d3.select(container)
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Month headers
+            const months = d3.timeMonths(minDate, maxDate);
+            months.forEach(m => {
+                const x = xScale(m);
+                svg.append('line')
+                    .attr('x1', x).attr('y1', -30).attr('x2', x).attr('y2', height)
+                    .attr('stroke', '#e1e5e9').attr('stroke-dasharray', '3,3');
+                svg.append('text')
+                    .attr('x', x + 4).attr('y', -10)
+                    .attr('font-size', '11px').attr('fill', '#666')
+                    .text(d3.timeFormat('%b %Y')(m));
+            });
+
+            // Row backgrounds + team labels
+            teamsInOrder.forEach((team, i) => {
+                const y = yScale(team);
+                const rh = yScale.bandwidth() + yScale.step() * yScale.paddingInner();
+                svg.append('rect')
+                    .attr('x', 0).attr('y', y - yScale.step() * yScale.paddingInner() / 2)
+                    .attr('width', width).attr('height', yScale.step())
+                    .attr('fill', i % 2 === 0 ? '#f9f9fb' : 'white');
+                // Baseline
+                const midY = y + yScale.bandwidth() / 2;
+                svg.append('line')
+                    .attr('x1', 0).attr('y1', midY).attr('x2', width).attr('y2', midY)
+                    .attr('stroke', '#dde1e7').attr('stroke-width', 1);
+                // Team label
+                svg.append('text')
+                    .attr('x', -8).attr('y', midY + 4)
+                    .attr('text-anchor', 'end')
+                    .attr('font-size', '12px').attr('fill', team === '(Others)' ? '#999' : '#333')
+                    .attr('font-style', team === '(Others)' ? 'italic' : 'normal')
+                    .text(team.length > 28 ? team.substring(0, 27) + '…' : team);
+            });
+
+            // Tooltip
+            const tooltip = d3.select('body').selectAll('#timeline-gantt-tooltip').data([null]).join('div')
+                .attr('id', 'timeline-gantt-tooltip')
+                .style('position', 'fixed').style('background', 'rgba(0,0,0,0.85)')
+                .style('color', 'white').style('padding', '8px 12px').style('border-radius', '6px')
+                .style('font-size', '12px').style('pointer-events', 'none')
+                .style('display', 'none').style('z-index', '9999').style('max-width', '220px');
+
+            // Diamond milestones
+            allItems.forEach(item => {
+                const cx = xScale(item.date);
+                const cy = yScale(item.team) + yScale.bandwidth() / 2;
+                svg.append('path')
+                    .attr('d', d3.symbol().type(d3.symbolDiamond).size(120)())
+                    .attr('transform', `translate(${cx},${cy})`)
+                    .attr('fill', '#667eea')
+                    .attr('stroke', 'white').attr('stroke-width', 1.5)
+                    .style('cursor', 'pointer')
+                    .on('mouseover', function(event) {
+                        d3.select(this).attr('fill', '#4a52c7').attr('transform', `translate(${cx},${cy}) scale(1.4)`);
+                        tooltip.style('display', 'block')
+                            .html(`<strong>${item.key}</strong><br>${d3.timeFormat('%b %d, %Y')(item.date)}`);
+                    })
+                    .on('mousemove', function(event) {
+                        tooltip.style('left', (event.clientX + 12) + 'px').style('top', (event.clientY - 28) + 'px');
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this).attr('fill', '#667eea').attr('transform', `translate(${cx},${cy})`);
+                        tooltip.style('display', 'none');
+                    })
+                    .on('click', function() {
+                        window.open('https://telus-cio.atlassian.net/browse/' + item.key, '_blank');
+                    });
+            });
+        }
+
+        // ─── END TIMELINE TAB ──────────────────────────────────────────────────────
+
         // Enhanced view switching to handle testing data loading
         function switchView(viewName) {
             // Remove active class from all buttons and content
@@ -6215,6 +6385,10 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             // If switching to testing status view, load data if needed
             if (viewName === 'testing-status') {
                 loadTestingDataOnSwitch();
+            }
+            // If switching to timeline, render from cached data if available
+            if (viewName === 'timeline') {
+                initTimelineTab();
             }
         }
 
