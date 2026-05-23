@@ -3406,8 +3406,8 @@ function updateEpicsMetrics() {
                     if (isNaN(dueDate.getTime())) {
                         if (key && !isCompleted) groups[groupKey].missingDueDateItems.push(key);
                     } else {
-                        // Pending: item has a valid due date — store key + formatted date label
-                        if (key) {
+                        // Pending: non-completed item with a valid due date — store key + formatted date label
+                        if (key && !isCompleted) {
                             const dateLabel = dueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                             groups[groupKey].pendingItems.push({ key, dateLabel });
                         }
