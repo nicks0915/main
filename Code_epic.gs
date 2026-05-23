@@ -508,7 +508,12 @@
           };
           applicationValue = extractFieldStr(fields[FIELD_MAPPINGS.impactedApplication])
                           || extractFieldStr(fields[applicationField]);
-          if (!applicationValue) {
+          if (applicationValue) {
+            if (applicationValue in APPLICATION_TO_TEAM_MAPPING) {
+              applicationValue = APPLICATION_TO_TEAM_MAPPING[applicationValue] || applicationValue;
+            }
+            // else: not in map → keep raw value as-is
+          } else {
             const prefix = issue.key ? issue.key.split('-')[0] : '';
             applicationValue = PROJECT_KEY_APPLICATION_MAPPING[prefix] || '';
           }

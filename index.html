@@ -524,7 +524,7 @@
                             <span class="sort-indicator" id="assessments-summary-sort-indicator">⇅</span>
                         </th>
                         <th class="sortable" id="assessments-application-header">
-                            Application
+                            Team
                             <span class="sort-indicator" id="assessments-application-sort-indicator">⇅</span>
                         </th>
                         <th class="sortable" id="assessments-gate2-cost-header">
@@ -1141,8 +1141,120 @@ const PROJECT_KEY_APPLICATION_MAPPING = {
   'VOGS':       'FUSE'
 };
 
+// Maps Column E (Application name) → Column C (Team) from Jira_Cloud_Directory.xlsx.
+// Empty string value means Column C was blank — fall back to using the Column E value itself as Team.
+const APPLICATION_TO_TEAM_MAPPING = {
+  'CloudBSS':                                                     'NC Cloud',
+  'Service Address Selection MFE':                                'FUSE',
+  'Appointment Selection MFE':                                    'FUSE',
+  'Cross Sell MFE':                                               'FUSE',
+  'Commerce Shell':                                               'FUSE',
+  'Commerce Session API':                                         'FUSE',
+  'Auth Status API':                                              'FUSE',
+  'Checkout Shell':                                               'Checkout',
+  'Hardware Selection MFE':                                       'FUSE',
+  'Send Quote MFE':                                               'FUSE',
+  'Manage Shell':                                                 'My TELUS',
+  'Add On Selection MFE (V2)':                                    'C3X',
+  'Hardware Shell':                                               'FUSE',
+  'Cancel / Renew MFE':                                           'My TELUS',
+  'Manage Licenses MFE':                                          'FUSE',
+  'Hardware Return MFE':                                          'FUSE',
+  'Payment MFE':                                                  'Checkout',
+  'Send Communication MFE':                                       '',
+  'Product Subscription Overview (PSO) MFE':                     'FUSE',
+  'Pro Install MFE':                                              'C3X',
+  'Credit Assessment MFE':                                        'C3X',
+  'Product Type Selection MFE':                                   'C3X',
+  'Promotion Selection MFE':                                      '',
+  'Device Selection MFE':                                         'C3X',
+  'Phone Number Selection MFE':                                   'C3X',
+  'Subscriber Information MFE':                                   'C3X',
+  'Sales Summary MFE':                                            'C3X',
+  'Order Summary MFE':                                            'C3X',
+  'Rate Plan Selection MFE':                                      'Channel Sales Experience',
+  'Port-In MFE':                                                  'Channel Sales Experience',
+  'Add On Selection MFE':                                         'Channel Sales Experience',
+  'Device Selection (Sim) MFE':                                   'C3X',
+  'Coupon Code MFE':                                              'C3X',
+  'Package Selection MFE':                                        'C3X',
+  'Create Account MFE':                                           'C3X',
+  'Create Customer MFE':                                          'C3X',
+  'Order Status MFE':                                             '',
+  'Digital Signature MFE':                                        '',
+  'Universal MFE + Shell (UOST)':                                 'Galaxy',
+  'Spatial Net':                                                  'Spatial Net',
+  'CAMP':                                                         'Mediation',
+  'CMF':                                                          'Mediation',
+  'OutCollect':                                                   'Mediation',
+  'Fraud Engine':                                                 'Precision Fraud',
+  'customer-api':                                                 'My TELUS',
+  'NBA MFE':                                                      'Analytics Implementation',
+  'Product Qualification':                                        'C30C',
+  'EOM':                                                          'Offer Management',
+  'GEM':                                                          'GEM',
+  'Experience Design':                                            'Experience Design',
+  'TMF-620':                                                      '',
+  'IFRS':                                                         'IFRS',
+  'NCCS':                                                         'National Compensation',
+  'C30C':                                                         'C30C',
+  'AMS':                                                          '',
+  'AES':                                                          'TV Activation (OPUS)',
+  'SSNS':                                                         '',
+  'PaaS':                                                         '',
+  'SWORM':                                                        '',
+  'My TELUS Billing UI':                                          'Dope Jackalopes',
+  'My TELUS Payments UI':                                         'Dope Jackalopes',
+  'My TELUS Appointments UI':                                     'Neo Titans',
+  'My TELUS Purple Manage Apps':                                  'Neo Titans',
+  'My TELUS Overview UI':                                         'Huffle Puffins',
+  'overview-api':                                                 'Cool Beans',
+  'My TELUS Navigation':                                          'My TELUS Navigation',
+  'My TELUS App (Expo - Front end)':                              'My T App',
+  'My TELUS App (BFF)':                                           'My T App',
+  'My TELUS Plans & Devices':                                     '',
+  'My TELUS B2B WLN':                                             'Cool Beans',
+  'My TELUS B2B WLS':                                             'Fast & Furious',
+  'TechHub':                                                      '',
+  'WFM':                                                          '',
+  'Subscriber DB':                                                '',
+  'Contact Engine':                                               '',
+  'Enterprise Communication Platform (ECP)':                      '',
+  'Channel Dashboard':                                            'Channel Dashboard',
+  'SubMgmt':                                                      '',
+  'Bundle Qualification API':                                     'Enterprise TMF APIs',
+  'TMF 702 SharedONT Task API':                                   'Enterprise TMF APIs',
+  'TMF-648':                                                      'Enterprise TMF APIs',
+  'Market Resolver':                                              '',
+  'WFM Sales Force Scheduler':                                    '',
+  'Purple Shop & Buy':                                            '',
+  'UDE Checkout (purple /yellow)':                                '',
+  'Casa Partner':                                                 '',
+  'Casa TBS':                                                     '',
+  'Casa CE':                                                      'CASA',
+  'EPC?????':                                                     '',
+  'EPC':                                                          '',
+  'CES':                                                          'CES',
+  'Subscription Management':                                      'Billing Team',
+  'Billing API':                                                  'Billing Team',
+  'Enterprise Account Management APIs':                           'Billing Team',
+  'Kenan':                                                        'Calculations, Accounts Receivables, Payments and Settlements',
+  'EPS - Enterprise Payment Systems':                             'EPS - Enterprise Payment Systems',
+  'Phone Number Inventory, Knowbility, Work order Batch Triggers': 'Facilities and Resource Management',
+  'Datahub Platform':                                             'Enterprise Analytics Platform',
+  'Datahub Tools':                                                'Analytics Tools 1',
+  'Home Device Discovery Platform (Replaces HDM Team)':           'Customer Data and Service Assurance',
+  'Bill Presentment & Analytics':                                 'Bill Genetix',
+  'Knowbility Decommission':                                      'DBE Platforms',
+  'Knowbility to GCP':                                            'DBE Platforms',
+  'Wonder Women':                                                 'DC Comics',
+  'Black Widow':                                                  'Marvel',
+  'TMF-645 (Service Qual API)':                                   '',
+  'Authentication MFE':                                           '',
+};
+
 function resolveApplication(record) {
-    // Unwrap a field value that may be a string, plain object, or array of objects
+    // Unwrap a field value: string, plain object {value/name}, or array of those
     // (JiraCheckboxesField returns [{value: "...", id: "..."}, ...])
     function extractVal(f) {
         if (!f) return '';
@@ -1158,24 +1270,33 @@ function resolveApplication(record) {
         if (f.name)  return String(f.name).trim();
         return '';
     }
-    // 1. customfield_30833 — Impacted Application (GREEN board, JiraCheckboxesField)
-    const impacted = extractVal(record['customfield_30833'])
+
+    // Get raw application value from JIRA fields (priority: customfield_30833 → customfield_19182)
+    const rawValue = extractVal(record['customfield_30833'])
                   || extractVal(record['cf[30833]'])
                   || extractVal(record['Custom field (Impacted Application)'])
-                  || extractVal(record['Impacted Applications']);
-    if (impacted) return impacted;
-    // 2. customfield_19182 — Application (SODP)
-    const std = extractVal(record['customfield_19182'])
-             || extractVal(record['Custom field (Application )'])
-             || extractVal(record['Application'])
-             || extractVal(record['Application '])
-             || extractVal(record['Custom field (Application)'])
-             || extractVal(record['cf[19182]'])
-             || extractVal(record['customfield_19902'])
-             || extractVal(record['cf[19902]'])
-             || extractVal(record['Application [Dropdown]']);
-    if (std) return std;
-    // 3. Key-prefix fallback mapping
+                  || extractVal(record['Impacted Applications'])
+                  || extractVal(record['customfield_19182'])
+                  || extractVal(record['Custom field (Application )'])
+                  || extractVal(record['Application'])
+                  || extractVal(record['Application '])
+                  || extractVal(record['Custom field (Application)'])
+                  || extractVal(record['cf[19182]'])
+                  || extractVal(record['customfield_19902'])
+                  || extractVal(record['cf[19902]'])
+                  || extractVal(record['Application [Dropdown]']);
+
+    if (rawValue) {
+        // Map application name (Col E) → team name (Col C) from Jira_Cloud_Directory.xlsx
+        if (rawValue in APPLICATION_TO_TEAM_MAPPING) {
+            // Empty team in Col C → use the application name (Col E) itself
+            return APPLICATION_TO_TEAM_MAPPING[rawValue] || rawValue;
+        }
+        // Not in map → use raw JIRA value as-is
+        return rawValue;
+    }
+
+    // No application field populated → fall back to JIRA key prefix → team mapping
     const key = record['Work Item Key'] || record['Key'] || record['Issue key'] || '';
     const prefix = key.split('-')[0];
     return PROJECT_KEY_APPLICATION_MAPPING[prefix] || '';
@@ -5041,7 +5162,7 @@ function clearSearch() {
         // Schema version — bump this whenever the CSV column structure changes.
         // Any cached data saved with an older schema version will be auto-discarded
         // so the user is prompted to refresh from JIRA with the new columns.
-        const JIRA_DATA_SCHEMA_VERSION = 4; // v4: normalizeSeverity strips invisible Unicode chars for correct metric counts
+        const JIRA_DATA_SCHEMA_VERSION = 5; // v5: APPLICATION_TO_TEAM_MAPPING — application values now resolved to team names
 
         function loadPersistedData() {
             try {
