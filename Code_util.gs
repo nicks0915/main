@@ -446,3 +446,8 @@ function findTestingColumnIndex(headers, possibleNames) {
   console.log('No match found for any of: ' + JSON.stringify(possibleNames));
   return -1; // Not found
 }
+
+function sendToGoogleChat(spaceName, content) {
+  // TODO: implement with Google Chat webhook/API
+  return { success: false, message: 'Google Chat integration coming soon' };
+}
