@@ -359,9 +359,9 @@ function formatSlackText(text) {
   var EMOJI = {
     'hourglass_flowing_sand': '⏳', 'hourglass': '⌛',
     'dart': '🎯', 'rocket': '🚀',
-    'large_yellow_circle': '🟡', 'large_green_circle': '🟢',
-    'large_orange_circle': '🟠', 'large_blue_circle': '🔵',
-    'red_circle': '🔴', 'large_red_circle': '🔴',
+    'large_yellow_circle': '{CIRCLE_YELLOW}', 'large_green_circle': '{CIRCLE_GREEN}',
+    'large_orange_circle': '{CIRCLE_ORANGE}', 'large_blue_circle': '{CIRCLE_BLUE}',
+    'red_circle': '{CIRCLE_RED}', 'large_red_circle': '{CIRCLE_RED}',
     'white_check_mark': '✅', 'heavy_check_mark': '✔️', 'check': '✔️',
     'ballot_box_with_check': '☑️',
     'x': '❌', 'warning': '⚠️', 'fire': '🔥',

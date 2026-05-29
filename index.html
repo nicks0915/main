@@ -7006,6 +7006,13 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
+            // Render colored circles (placeholders set server-side in formatSlackText)
+            escaped = escaped
+                .replace(/\{CIRCLE_GREEN\}/g,  '<span style="color:#28a745;font-size:1.2em;vertical-align:middle;line-height:1;">&#9679;</span>')
+                .replace(/\{CIRCLE_YELLOW\}/g, '<span style="color:#ffc107;font-size:1.2em;vertical-align:middle;line-height:1;">&#9679;</span>')
+                .replace(/\{CIRCLE_RED\}/g,    '<span style="color:#dc3545;font-size:1.2em;vertical-align:middle;line-height:1;">&#9679;</span>')
+                .replace(/\{CIRCLE_ORANGE\}/g, '<span style="color:#fd7e14;font-size:1.2em;vertical-align:middle;line-height:1;">&#9679;</span>')
+                .replace(/\{CIRCLE_BLUE\}/g,   '<span style="color:#007bff;font-size:1.2em;vertical-align:middle;line-height:1;">&#9679;</span>');
             // Convert *bold* → <strong>bold</strong> (no space after/before the *)
             return escaped.replace(/\*(?!\s)([^*\n]+?)(?<!\s)\*/g, '<strong>$1</strong>');
         }
