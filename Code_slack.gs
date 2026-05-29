@@ -294,7 +294,7 @@ function fetchExecutiveStatusFromSlack() {
       if (keywords.some(function(k) { return lower.indexOf(k) !== -1; })) {
         return {
           success: true,
-          text: msg.text,
+          text: formatSlackText(msg.text),
           postedAt: new Date(parseFloat(msg.ts) * 1000).toLocaleString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric',
             hour: '2-digit', minute: '2-digit'
@@ -309,7 +309,7 @@ function fetchExecutiveStatusFromSlack() {
       if (m.type === 'message' && !m.subtype && m.text) {
         return {
           success: true,
-          text: m.text,
+          text: formatSlackText(m.text),
           postedAt: new Date(parseFloat(m.ts) * 1000).toLocaleString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric',
             hour: '2-digit', minute: '2-digit'
@@ -324,4 +324,67 @@ function fetchExecutiveStatusFromSlack() {
   } catch (error) {
     return { success: false, message: 'Error fetching from Slack: ' + error.message };
   }
+}
+
+/**
+ * Convert raw Slack API message text to clean readable text.
+ * - Decodes HTML entities (&amp; &lt; &gt;)
+ * - Converts <mailto:email|Name> and <url|Label> links to just the label
+ * - Removes bare URL links and user/channel mentions
+ * - Maps common Slack :emoji_name: codes to Unicode emoji characters
+ * - Collapses extra whitespace left by removed elements
+ * Bold markers (*text*) are left in place — the client converts them to HTML <strong>.
+ */
+function formatSlackText(text) {
+  if (!text) return '';
+
+  // 1. Decode HTML entities Slack encodes in API responses
+  text = text.replace(/&amp;/g, '&')
+             .replace(/&lt;/g, '<')
+             .replace(/&gt;/g, '>');
+
+  // 2. Email/URL links with display label: <mailto:...|Name> or <https://...|Label> → Label
+  text = text.replace(/<(?:mailto|https?|http):[^|>]+\|([^>]+)>/g, '$1');
+
+  // 3. Bare URL links: <https://...> → remove
+  text = text.replace(/<https?:[^>]+>/g, '');
+
+  // 4. User mentions: <@UXXXXXXX> → remove
+  text = text.replace(/<@[A-Z0-9]+>/g, '');
+
+  // 5. Channel links: <#CXXXXXXX|channel-name> → #channel-name
+  text = text.replace(/<#[A-Z0-9]+\|([^>]+)>/g, '#$1');
+
+  // 6. Map Slack emoji codes to Unicode
+  var EMOJI = {
+    'hourglass_flowing_sand': '⏳', 'hourglass': '⌛',
+    'dart': '🎯', 'rocket': '🚀',
+    'large_yellow_circle': '🟡', 'large_green_circle': '🟢',
+    'large_orange_circle': '🟠', 'large_blue_circle': '🔵',
+    'red_circle': '🔴', 'large_red_circle': '🔴',
+    'white_check_mark': '✅', 'heavy_check_mark': '✔️', 'check': '✔️',
+    'ballot_box_with_check': '☑️',
+    'x': '❌', 'warning': '⚠️', 'fire': '🔥',
+    'chart_with_upwards_trend': '📈', 'chart_with_downwards_trend': '📉',
+    'bar_chart': '📊', 'clipboard': '📋', 'memo': '📝', 'pushpin': '📌',
+    'calendar': '📅', 'checkered_flag': '🏁', 'rotating_light': '🚨',
+    'eyes': '👀', 'thumbsup': '👍', 'thumbsdown': '👎',
+    'raised_hands': '🙌', 'tada': '🎉', 'trophy': '🏆',
+    'star': '⭐', 'bell': '🔔', 'bulb': '💡',
+    'construction': '🚧', 'hammer': '🔨', 'wrench': '🔧', 'mag': '🔍',
+    'exclamation': '❗', 'question': '❓', 'information_source': 'ℹ️',
+    'arrow_right': '➡️', 'fast_forward': '⏩', 'stopwatch': '⏱️',
+    'zap': '⚡', 'no_entry': '⛔', 'no_entry_sign': '🚫',
+    'heavy_minus_sign': '➖', 'heavy_plus_sign': '➕', 'ok': '🆗',
+    'link': '🔗', 'lock': '🔒', 'unlock': '🔓', 'key': '🔑'
+  };
+
+  text = text.replace(/:([a-z0-9_+-]+):/g, function(match, name) {
+    return Object.prototype.hasOwnProperty.call(EMOJI, name) ? EMOJI[name] : '';
+  });
+
+  // 7. Collapse multiple spaces/tabs left by removals (preserve newlines)
+  text = text.replace(/[ \t]{2,}/g, ' ');
+
+  return text.trim();
 }

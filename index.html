@@ -6998,6 +6998,18 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
 
         // Panel helper functions
 
+        // Convert server-cleaned Slack text to safe HTML for display.
+        // Escapes HTML chars first, then converts *bold* markers to <strong> tags.
+        // Slack bold rule: * must not be followed/preceded by a space.
+        function renderSlackText(text) {
+            var escaped = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            // Convert *bold* → <strong>bold</strong> (no space after/before the *)
+            return escaped.replace(/\*(?!\s)([^*\n]+?)(?<!\s)\*/g, '<strong>$1</strong>');
+        }
+
         // Read live text from a panel box, returning '' for placeholder/empty state
         function getPanelText(panelId) {
             var box = document.getElementById(panelId + '-textbox');
@@ -7063,7 +7075,8 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                         if (result.postedAt) header += ' — posted ' + result.postedAt;
                         header += ']\n\n';
                         if (result.note) header += '[Note: ' + result.note + ']\n\n';
-                        box.textContent = header + result.text;
+                        var fullText = header + result.text;
+                        box.innerHTML = renderSlackText(fullText);
                     } else {
                         box.textContent = 'Could not fetch from Slack: ' + result.message;
                     }
