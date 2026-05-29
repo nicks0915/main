@@ -7464,6 +7464,43 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             if (modal) modal.remove();
         }
 
+        // Convert the executive panel's rendered HTML back to Slack mrkdwn format
+        // so circles and bold display correctly when re-posted to Slack.
+        function getExecutivePanelTextAsSlack() {
+            var box = document.getElementById('executive-textbox');
+            if (!box) return '';
+            if (box.childNodes.length === 1 && box.firstChild.nodeName === 'P') return '';
+            var html = box.innerHTML;
+
+            // Colored circle spans → Slack emoji codes (match by color value in style attr)
+            html = html.replace(/<span[^>]*color:#28a745[^>]*>[^<]*<\/span>/g, ':large_green_circle:');
+            html = html.replace(/<span[^>]*color:#ffc107[^>]*>[^<]*<\/span>/g, ':large_yellow_circle:');
+            html = html.replace(/<span[^>]*color:#dc3545[^>]*>[^<]*<\/span>/g, ':red_circle:');
+            html = html.replace(/<span[^>]*color:#fd7e14[^>]*>[^<]*<\/span>/g, ':large_orange_circle:');
+            html = html.replace(/<span[^>]*color:#007bff[^>]*>[^<]*<\/span>/g, ':large_blue_circle:');
+
+            // <strong> → Slack bold
+            html = html.replace(/<strong>([\s\S]*?)<\/strong>/g, '*$1*');
+
+            // Block elements → newlines
+            html = html.replace(/<br\s*\/?>/gi, '\n');
+            html = html.replace(/<\/(div|p)>/gi, '\n');
+
+            // Strip remaining tags
+            html = html.replace(/<[^>]+>/g, '');
+
+            // Decode HTML entities
+            html = html.replace(/&amp;/g, '&')
+                       .replace(/&lt;/g, '<')
+                       .replace(/&gt;/g, '>')
+                       .replace(/&nbsp;/g, ' ');
+
+            // Collapse 3+ newlines → 2
+            html = html.replace(/\n{3,}/g, '\n\n');
+
+            return html.trim();
+        }
+
         function confirmSendToSlack() {
             // Collect all checked channel IDs
             var checkedChannels = Array.from(
@@ -7477,13 +7514,19 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
 
             // Read content from the live textbox (respects edits); fall back to rebuild
             var sourceType = _slackSourceType || 'defects';
-            var summaryToSend = getPanelText(sourceType);
-            if (!summaryToSend) {
-                if (sourceType === 'defects') summaryToSend = buildDefectsSummaryText();
-                else if (sourceType === 'epics') summaryToSend = buildEpicsSummaryText();
-                else summaryToSend = buildDefectsSummaryText() + '\n\n--------------------\n\n' + buildEpicsSummaryText();
+            var summaryToSend;
+            if (sourceType === 'executive') {
+                // Convert rendered HTML back to Slack mrkdwn (bold + emoji circles)
+                summaryToSend = getExecutivePanelTextAsSlack();
+            } else {
+                summaryToSend = getPanelText(sourceType);
+                if (!summaryToSend) {
+                    if (sourceType === 'defects') summaryToSend = buildDefectsSummaryText();
+                    else if (sourceType === 'epics') summaryToSend = buildEpicsSummaryText();
+                    else summaryToSend = buildDefectsSummaryText() + '\n\n--------------------\n\n' + buildEpicsSummaryText();
+                }
             }
-            var sendType = (sourceType === 'executive') ? 'both' : sourceType;
+            var sendType = sourceType; // 'executive', 'defects', or 'epics'
 
             // Disable send button and show loading
             var sendBtn = document.getElementById('slack-modal-send-btn');

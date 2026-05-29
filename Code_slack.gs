@@ -99,14 +99,23 @@ function sendToSlack(summaryText, summaryType, channelId) {
  * Uses Slack Block Kit for rich formatting
  */
 function formatSlackMessage(summaryText, summaryType) {
-  const emoji = summaryType === 'defects' ? '🐛' : '📊';
-  const title = summaryType === 'defects' ? 'DEFECTS STATUS REPORT' : summaryType === 'both' ? 'DEFECTS & WORK ITEMS STATUS REPORT' : 'WORK ITEMS STATUS REPORT';
-  const timestamp = new Date().toLocaleString('en-US', { 
+  const emoji = summaryType === 'defects' ? '🐛' : summaryType === 'executive' ? '📋' : '📊';
+  const title = summaryType === 'defects'   ? 'DEFECTS STATUS REPORT'
+              : summaryType === 'both'       ? 'DEFECTS & WORK ITEMS STATUS REPORT'
+              : summaryType === 'executive'  ? 'EXECUTIVE STATUS UPDATE'
+              :                               'WORK ITEMS STATUS REPORT';
+  const timestamp = new Date().toLocaleString('en-US', {
     timeZone: 'America/Vancouver',
     dateStyle: 'medium',
     timeStyle: 'short'
   });
-  
+
+  // Executive status: send as mrkdwn so Slack renders bold and emoji natively.
+  // Other types: wrap in a code block to preserve fixed-width alignment.
+  const bodyText = summaryType === 'executive'
+    ? summaryText
+    : '```\n' + summaryText + '\n```';
+
   return {
     text: `${emoji} ${title}`,
     blocks: [
@@ -122,7 +131,7 @@ function formatSlackMessage(summaryText, summaryType) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '```\n' + summaryText + '\n```'
+          text: bodyText
         }
       },
       {
