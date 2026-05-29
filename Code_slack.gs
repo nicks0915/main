@@ -250,6 +250,78 @@ Total Defects: 28`;
     console.log('❌ Test failed!');
     console.log(result.message);
   }
-  
+
   return result;
+}
+
+/**
+ * Fetch the most recent Entertainment 5.0 status message from #prod-green-commerce.
+ * Searches up to the last 50 messages for keywords; falls back to the most recent message.
+ * Requires the bot token to have channels:history scope.
+ * @returns {Object} { success, text, postedAt } or { success: false, message }
+ */
+function fetchExecutiveStatusFromSlack() {
+  try {
+    var botToken = getSlackBotToken();
+    var channelId = 'C03UMGV7DDE'; // prod-green-commerce
+
+    var response = UrlFetchApp.fetch(
+      'https://slack.com/api/conversations.history?channel=' + channelId + '&limit=50',
+      {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + botToken },
+        muteHttpExceptions: true
+      }
+    );
+
+    var data = JSON.parse(response.getContentText());
+
+    if (!data.ok) {
+      var hint = data.error === 'missing_scope'
+        ? ' — add channels:history scope to your Slack app at api.slack.com/apps'
+        : '';
+      return { success: false, message: 'Slack API error: ' + data.error + hint };
+    }
+
+    var messages = data.messages || [];
+    var keywords = ['entertainment 5.0', 'optik tv on green', 'entertainment on green', 'optik tv'];
+
+    // Find most recent human message matching any keyword
+    for (var i = 0; i < messages.length; i++) {
+      var msg = messages[i];
+      if (msg.type !== 'message' || msg.subtype) continue;
+      var lower = (msg.text || '').toLowerCase();
+      if (keywords.some(function(k) { return lower.indexOf(k) !== -1; })) {
+        return {
+          success: true,
+          text: msg.text,
+          postedAt: new Date(parseFloat(msg.ts) * 1000).toLocaleString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })
+        };
+      }
+    }
+
+    // No keyword match — return most recent human message
+    for (var j = 0; j < messages.length; j++) {
+      var m = messages[j];
+      if (m.type === 'message' && !m.subtype && m.text) {
+        return {
+          success: true,
+          text: m.text,
+          postedAt: new Date(parseFloat(m.ts) * 1000).toLocaleString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          }),
+          note: 'No exact Entertainment 5.0 keyword match — showing most recent message'
+        };
+      }
+    }
+
+    return { success: false, message: 'No messages found in #prod-green-commerce' };
+
+  } catch (error) {
+    return { success: false, message: 'Error fetching from Slack: ' + error.message };
+  }
 }

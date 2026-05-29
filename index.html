@@ -7046,13 +7046,36 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             }
         }
 
-        // Generate Executive Status by combining Defects + Work Items panel text
+        // Generate Executive Status by fetching latest Entertainment 5.0 update from Slack
         function generateExecutiveSummary() {
             var box = document.getElementById('executive-textbox');
-            if (!box) return;
-            var defectsText = getPanelText('defects') || buildDefectsSummaryText();
-            var epicsText = getPanelText('epics') || buildEpicsSummaryText();
-            box.textContent = defectsText + '\n\n--------------------\n\n' + epicsText;
+            var btn = document.getElementById('executive-summary-btn');
+            if (!box || !btn) return;
+
+            var originalBtnHTML = btn.innerHTML;
+            btn.innerHTML = '&#9203; Fetching...';
+            btn.disabled = true;
+
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    if (result.success) {
+                        var header = '[Fetched from #prod-green-commerce';
+                        if (result.postedAt) header += ' — posted ' + result.postedAt;
+                        header += ']\n\n';
+                        if (result.note) header += '[Note: ' + result.note + ']\n\n';
+                        box.textContent = header + result.text;
+                    } else {
+                        box.textContent = 'Could not fetch from Slack: ' + result.message;
+                    }
+                    btn.innerHTML = originalBtnHTML;
+                    btn.disabled = false;
+                })
+                .withFailureHandler(function(error) {
+                    box.textContent = 'Error: ' + (error.message || error);
+                    btn.innerHTML = originalBtnHTML;
+                    btn.disabled = false;
+                })
+                .fetchExecutiveStatusFromSlack();
         }
 
         function openGoogleChatModal(sourceType) {
