@@ -240,7 +240,7 @@
 <button class="header-nav-btn assessments-tab" id="assessments-btn" onclick="switchView('assessments')">💰 Assessments</button>
 <button class="header-nav-btn timeline-tab" id="timeline-btn" onclick="switchView('timeline')">📅 Timeline</button>
 <button class="header-nav-btn defects-tab" id="defects-btn" onclick="switchView('defects')">🐛 Defects</button>
-<button class="header-nav-btn testing-status-tab" id="testing-status-btn" onclick="switchView('testing-status')" style="pointer-events:none;opacity:0.5;">
+<button class="header-nav-btn testing-status-tab" id="testing-status-btn" onclick="switchView('testing-status')" style="pointer-events:auto;opacity:1;">
 <svg width="1.5em" height="1.5em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-label="Testing Status Icon" style="vertical-align:middle;margin-right:0.4em;object-fit:contain;display:inline-block;">
   <g fill="none">
     <path fill="#c2f3ff" d="M17.175 15.667H6.825l2.555-4.19V3.094h5.239v8.381z"/>
@@ -566,8 +566,11 @@
         </div>
 
         <!-- Gantt Chart -->
-        <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.08);margin-bottom:24px;">
-            <h4 style="margin:0 0 12px 0;color:#333;">Pending Items by Team</h4>
+        <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.08);margin-bottom:24px;" id="timeline-gantt-wrapper">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h4 style="margin:0;color:#333;">Pending Items by Team</h4>
+                <button id="timeline-gantt-toggle" onclick="toggleTimelineGantt()" style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;padding:4px 12px;font-size:0.85rem;cursor:pointer;color:#555;">&#x2296; Minimise</button>
+            </div>
             <div id="timeline-gantt-container" style="overflow-x:auto;min-height:200px;"></div>
         </div>
 
@@ -597,10 +600,10 @@
                 </div>
             </div>
             <div class="filter-group">
-                <label>Application</label>
+                <label>Team</label>
                 <div class="multi-container">
                     <button class="multi-btn" id="epic-app-btn">
-                        <span id="epic-app-text">All Applications</span>
+                        <span id="epic-app-text">All Teams</span>
                         <span>▼</span>
                     </button>
                     <div class="dropdown" id="epic-app-dropdown">
@@ -656,7 +659,7 @@
                         <div class="metric-value" id="epics-non-green-count" style="color:#dc3545; font-size: 1.8rem;">0</div>
                     </div>
                     <div class="health-metric-card" id="epics-past-due-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #6f42c1; cursor: pointer; transition: all 0.2s;">
-                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Past Due Date</div>
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Overdue</div>
                         <div class="metric-value" id="epics-past-due-count" style="color:#6f42c1; font-size: 1.8rem;">0</div>
                     </div>
                     <!-- Row 2: Unassigned & No Due Date -->
@@ -674,7 +677,7 @@
                         <div class="metric-value" id="epics-non-completed-count" style="color:#17a2b8; font-size: 1.8rem;">0</div>
                     </div>
                     <div class="health-metric-card" id="epics-future-dated-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745; cursor: pointer; transition: all 0.2s;">
-                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Future Due Date</div>
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Due Soon</div>
                         <div class="metric-value" id="epics-future-dated-count" style="color:#28a745; font-size: 1.8rem;">0</div>
                     </div>
                 </div>
@@ -729,7 +732,7 @@
                             <span class="sort-indicator" id="epics-status-details-sort-indicator">⇅</span>
                         </th>
                         <th class="sortable" id="epics-application-header">
-                            Application
+                            Team
                             <span class="sort-indicator" id="epics-application-sort-indicator">⇅</span>
                         </th>
                         <th class="sortable" id="epics-status-header">
@@ -1573,7 +1576,7 @@ function populateEpicsFilters() {
 
     // Reset button text
     updateEpicsButtonText('epic-issue-type', epicsFilters.issueTypes, 'All Issue Types');
-    updateEpicsButtonText('epic-app', epicsFilters.applications, 'All Applications');
+    updateEpicsButtonText('epic-app', epicsFilters.applications, 'All Teams');
     updateEpicsButtonText('epic-status', epicsFilters.statuses, 'All Statuses');
     updateEpicsButtonText('epic-iterations', epicsFilters.iterations, 'All Iterations');
 }
@@ -1602,7 +1605,7 @@ function populateEpicsDropdown(type, options) {
             epicsFilters.statuses = getEpicsSelectedValues('epic-status');
             epicsFilters.iterations = getEpicsSelectedValues('epic-iterations');
             updateEpicsButtonText('epic-issue-type', epicsFilters.issueTypes, 'All Issue Types');
-            updateEpicsButtonText('epic-app', epicsFilters.applications, 'All Applications');
+            updateEpicsButtonText('epic-app', epicsFilters.applications, 'All Teams');
             updateEpicsButtonText('epic-status', epicsFilters.statuses, 'All Statuses');
             updateEpicsButtonText('epic-iterations', epicsFilters.iterations, 'All Iterations');
             applyEpicsFilters();
@@ -3048,8 +3051,10 @@ function updateEpicsMetrics() {
         function updateAssessmentsMetrics() {
             const data = assessmentsFilteredData;
 
-            // --- Left "Cost" box: rows for Epic, Story, Capability ---
-            const DISPLAY_TYPES = ['Epic', 'Story', 'Capability'];
+            // --- Left "Cost" box: rows for Epics (GREEN) and Story (Non-GREEN) ---
+            // Epics (GREEN): Epic type, excluding any whose key starts with "SODP"
+            // Story (Non-GREEN): all Story type records
+            const DISPLAY_TYPES = ['Epic', 'Story'];
             const typeCosts = {};
             let grandTotal = 0, grandCost = 0;
 
@@ -3057,6 +3062,11 @@ function updateEpicsMetrics() {
                 const rawType = (d.issueTypeNormalized || '').trim();
                 const matchKey = DISPLAY_TYPES.find(t => t.toLowerCase() === rawType.toLowerCase());
                 if (!matchKey) return;
+                // For Epic: skip SODP board items (only count GREEN board epics)
+                if (matchKey === 'Epic') {
+                    const k = (d.keyNormalized || d['Work Item Key'] || d['Key'] || '').trim().toUpperCase();
+                    if (k.startsWith('SODP-') || k.startsWith('SODP')) return;
+                }
                 if (!typeCosts[matchKey]) typeCosts[matchKey] = { count: 0, cost: 0 };
                 const costStr = d['customfield_20182'] || d['Gate 2 - Cost Estimate'] || '';
                 const costVal = parseCostValue(costStr);
@@ -3083,23 +3093,22 @@ function updateEpicsMetrics() {
                     costContainer.appendChild(hdr);
 
                     // Helper: create a clickable type row
-                    function makeTypeRow(type, t) {
+                    // filterType = actual issueTypeNormalized value for filtering; displayName = UI label
+                    function makeTypeRow(filterType, displayName, t) {
                         const row = document.createElement('div');
-                        const isActive = assessmentsTypeFilter === type;
+                        const isActive = assessmentsTypeFilter === filterType;
                         row.className = 'assessments-type-row' + (isActive ? ' active' : '');
-                        row.dataset.type = type;
+                        row.dataset.type = filterType;
                         row.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;padding:5px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.15s;border-radius:4px;' + (isActive ? 'background:#e8f4fd;' : '');
-                        row.innerHTML = `
-                            <span class="type-row-check" style="font-size:0.8rem;color:#007bff;">${isActive ? '✓' : ''}</span>
-                            <span style="font-size:0.9rem;color:#333;font-weight:500;">${type}</span>
-                            <span style="font-size:0.9rem;color:#555;text-align:right;min-width:52px;padding-left:12px;">${t.count}</span>
-                            <span style="font-size:0.9rem;color:#28a745;font-weight:600;text-align:right;min-width:90px;padding-left:12px;">${formatCostValue(t.cost)}</span>
-                        `;
+                        row.innerHTML = '<span class="type-row-check" style="font-size:0.8rem;color:#007bff;">' + (isActive ? '&#10003;' : '') + '</span>'
+                            + '<span style="font-size:0.9rem;color:#333;font-weight:500;">' + displayName + '</span>'
+                            + '<span style="font-size:0.9rem;color:#555;text-align:right;min-width:52px;padding-left:12px;">' + t.count + '</span>'
+                            + '<span style="font-size:0.9rem;color:#28a745;font-weight:600;text-align:right;min-width:90px;padding-left:12px;">' + formatCostValue(t.cost) + '</span>';
                         row.addEventListener('click', function() {
-                            if (assessmentsTypeFilter === type) {
+                            if (assessmentsTypeFilter === filterType) {
                                 assessmentsTypeFilter = null;
                             } else {
-                                assessmentsTypeFilter = type;
+                                assessmentsTypeFilter = filterType;
                             }
                             applyAssessmentsFilters();
                         });
@@ -3108,31 +3117,21 @@ function updateEpicsMetrics() {
                         return row;
                     }
 
-                    // Epic row
-                    if (typeCosts['Epic']) costContainer.appendChild(makeTypeRow('Epic', typeCosts['Epic']));
-                    // Story row
-                    if (typeCosts['Story']) costContainer.appendChild(makeTypeRow('Story', typeCosts['Story']));
+                    // Epics (GREEN) row — filter by 'Epic', display as 'Epics (GREEN)'
+                    if (typeCosts['Epic']) costContainer.appendChild(makeTypeRow('Epic', 'Epics (GREEN)', typeCosts['Epic']));
+                    // Story (Non-GREEN) row
+                    if (typeCosts['Story']) costContainer.appendChild(makeTypeRow('Story', 'Story (Non-GREEN)', typeCosts['Story']));
 
-                    // Epic + Story subtotal row (non-clickable)
+                    // Total row (non-clickable)
                     const esCount = (typeCosts['Epic'] ? typeCosts['Epic'].count : 0) + (typeCosts['Story'] ? typeCosts['Story'].count : 0);
                     const esCost  = (typeCosts['Epic'] ? typeCosts['Epic'].cost  : 0) + (typeCosts['Story'] ? typeCosts['Story'].cost  : 0);
                     const subtotalRow = document.createElement('div');
                     subtotalRow.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;padding:6px 8px;border-top:2px solid #dee2e6;border-bottom:2px solid #dee2e6;background:#f0f4ff;border-radius:4px;margin-top:2px;';
-                    subtotalRow.innerHTML = `
-                        <span></span>
-                        <span style="font-size:0.9rem;color:#333;font-weight:700;">Total</span>
-                        <span style="font-size:0.9rem;color:#333;font-weight:700;text-align:right;min-width:52px;padding-left:12px;">${esCount}</span>
-                        <span style="font-size:0.9rem;color:#28a745;font-weight:700;text-align:right;min-width:90px;padding-left:12px;">${formatCostValue(esCost)}</span>
-                    `;
+                    subtotalRow.innerHTML = '<span></span>'
+                        + '<span style="font-size:0.9rem;color:#333;font-weight:700;">Total</span>'
+                        + '<span style="font-size:0.9rem;color:#333;font-weight:700;text-align:right;min-width:52px;padding-left:12px;">' + esCount + '</span>'
+                        + '<span style="font-size:0.9rem;color:#28a745;font-weight:700;text-align:right;min-width:90px;padding-left:12px;">' + formatCostValue(esCost) + '</span>';
                     costContainer.appendChild(subtotalRow);
-
-                    // Capability row (with spacing separator)
-                    if (typeCosts['Capability']) {
-                        const spacer = document.createElement('div');
-                        spacer.style.cssText = 'height:6px;';
-                        costContainer.appendChild(spacer);
-                        costContainer.appendChild(makeTypeRow('Capability', typeCosts['Capability']));
-                    }
                 }
             }
 
@@ -6178,6 +6177,20 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
         // ─── TIMELINE TAB ──────────────────────────────────────────────────────────
 
         let timelineData = null; // normalized records loaded for timeline
+        var timelineGanttMinimized = false;
+
+        function toggleTimelineGantt() {
+            timelineGanttMinimized = !timelineGanttMinimized;
+            var container = document.getElementById('timeline-gantt-container');
+            var btn = document.getElementById('timeline-gantt-toggle');
+            if (timelineGanttMinimized) {
+                container.style.display = 'none';
+                btn.innerHTML = '&#x229E; Maximise';
+            } else {
+                container.style.display = '';
+                btn.innerHTML = '&#x2296; Minimise';
+            }
+        }
 
         function initTimelineTab() {
             if (timelineData && timelineData.length > 0) {
@@ -6998,7 +7011,7 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             betaLaunchGating: false,
             gtmLaunchGating: false,
             assessmentsTab: false,
-            testingTab: false
+            testingTab: true
         };
 
         /**
