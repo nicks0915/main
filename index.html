@@ -7104,10 +7104,35 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 .fetchExecutiveStatusFromSlack();
         }
 
+        // Convert the executive panel's rendered HTML to plain text for Google Chat.
+        // Circles → Unicode emoji (rendered natively by Google Chat).
+        // Bold spans → *bold* (Google Chat supports Slack-style bold).
+        // Slack mentions → plain @Name (can't tag cross-platform).
+        function getExecutivePanelTextForGChat() {
+            var box = document.getElementById('executive-textbox');
+            if (!box) return '';
+            if (box.childNodes.length === 1 && box.firstChild.nodeName === 'P') return '';
+            var html = box.innerHTML;
+            html = html.replace(/<span[^>]*color:#28a745[^>]*>[^<]*<\/span>/g, '🟢'); // 🟢
+            html = html.replace(/<span[^>]*color:#ffc107[^>]*>[^<]*<\/span>/g, '🟡'); // 🟡
+            html = html.replace(/<span[^>]*color:#dc3545[^>]*>[^<]*<\/span>/g, '🔴'); // 🔴
+            html = html.replace(/<span[^>]*color:#fd7e14[^>]*>[^<]*<\/span>/g, '🟠'); // 🟠
+            html = html.replace(/<span[^>]*color:#007bff[^>]*>[^<]*<\/span>/g, '🔵'); // 🔵
+            html = html.replace(/<span[^>]*data-slack-uid="[^"]*"[^>]*>(@?[^<]*)<\/span>/g, '$1');
+            html = html.replace(/<strong>([\s\S]*?)<\/strong>/g, '*$1*');
+            html = html.replace(/<br\s*\/?>/gi, '\n');
+            html = html.replace(/<\/(div|p)>/gi, '\n');
+            html = html.replace(/<[^>]+>/g, '');
+            html = html.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ');
+            html = html.replace(/\n{3,}/g, '\n\n');
+            return html.trim();
+        }
+
         function openGoogleChatModal(sourceType) {
             var existing = document.getElementById('google-chat-modal');
             if (existing) existing.remove();
-            var gchatSourceType = sourceType || currentSummaryType;
+            _gchatSourceType = sourceType || currentSummaryType || 'defects';
+
             var modal = document.createElement('div');
             modal.id = 'google-chat-modal';
             modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;';
@@ -7119,23 +7144,37 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 '</div>' +
                 '<div style="margin-bottom:20px;">' +
                 '<label style="display:block;font-weight:600;color:#333;margin-bottom:10px;font-size:14px;">Which space?</label>' +
-                '<div style="display:flex;flex-direction:column;gap:8px;">' +
-                '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #e1e5e9;">' +
-                '<input type="radio" name="gchat-space" value="Test1" checked style="accent-color:#1a73e8;"> Test1' +
-                '</label>' +
-                '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #e1e5e9;">' +
-                '<input type="radio" name="gchat-space" value="Test2" style="accent-color:#1a73e8;"> Test2' +
-                '</label>' +
-                '</div>' +
+                '<div id="gchat-spaces-list" style="display:flex;flex-direction:column;gap:8px;"><em style="color:#999;font-size:13px;">Loading spaces...</em></div>' +
                 '</div>' +
                 '<div id="gchat-modal-status" style="display:none;padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:14px;"></div>' +
                 '<div style="display:flex;gap:12px;justify-content:flex-end;">' +
                 '<button onclick="closeGoogleChatModal()" style="padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;font-size:14px;cursor:pointer;font-weight:500;">Cancel</button>' +
-                '<button id="gchat-modal-send-btn" onclick="confirmSendToGoogleChat(\'' + gchatSourceType + '\')" style="padding:10px 24px;border:none;border-radius:6px;background:#1a73e8;color:#fff;font-size:14px;cursor:pointer;font-weight:600;">Send &#128640;</button>' +
+                '<button id="gchat-modal-send-btn" onclick="confirmSendToGoogleChat()" style="padding:10px 24px;border:none;border-radius:6px;background:#1a73e8;color:#fff;font-size:14px;cursor:pointer;font-weight:600;">Send &#128640;</button>' +
                 '</div>' +
                 '</div>';
             document.body.appendChild(modal);
             modal.addEventListener('click', function(e) { if (e.target === modal) closeGoogleChatModal(); });
+
+            // Load spaces dynamically from config
+            google.script.run
+                .withSuccessHandler(function(spaces) {
+                    var list = document.getElementById('gchat-spaces-list');
+                    if (!list) return;
+                    if (!spaces || spaces.length === 0) {
+                        list.innerHTML = '<em style="color:#999;font-size:13px;">No spaces configured in Core.gs</em>';
+                        return;
+                    }
+                    list.innerHTML = spaces.map(function(s, i) {
+                        return '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #e1e5e9;">' +
+                            '<input type="radio" name="gchat-space" value="' + s.id + '"' + (i === 0 ? ' checked' : '') + ' style="accent-color:#1a73e8;"> ' + s.name +
+                            '</label>';
+                    }).join('');
+                })
+                .withFailureHandler(function() {
+                    var list = document.getElementById('gchat-spaces-list');
+                    if (list) list.innerHTML = '<em style="color:#c00;font-size:13px;">Failed to load spaces</em>';
+                })
+                .getGChatSpaces();
         }
 
         function closeGoogleChatModal() {
@@ -7143,37 +7182,49 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             if (modal) modal.remove();
         }
 
-        function confirmSendToGoogleChat(sourceType) {
+        function confirmSendToGoogleChat() {
             var selectedSpace = document.querySelector('input[name="gchat-space"]:checked');
             if (!selectedSpace) {
-                showGChatModalStatus('Please select a space.', '#f8d7da', '#721c24');
+                showGChatModalStatus('Please select a space.', '#fff3cd', '#856404');
                 return;
             }
-            var spaceName = selectedSpace.value;
-            // Read from live textbox first (respects edits); fall back to rebuild
-            var content = getPanelText(sourceType);
-            if (!content) {
-                if (sourceType === 'defects') content = buildDefectsSummaryText();
-                else if (sourceType === 'epics') content = buildEpicsSummaryText();
-                else content = buildDefectsSummaryText() + '\n\n--------------------\n\n' + buildEpicsSummaryText();
+            var spaceId = selectedSpace.value;
+            var spaceLabel = selectedSpace.parentElement ? selectedSpace.parentElement.textContent.trim() : spaceId;
+
+            var sourceType = _gchatSourceType || 'defects';
+            var content;
+            if (sourceType === 'executive') {
+                content = getExecutivePanelTextForGChat();
+            } else {
+                content = getPanelText(sourceType);
+                if (!content) {
+                    if (sourceType === 'defects') content = buildDefectsSummaryText();
+                    else if (sourceType === 'epics') content = buildEpicsSummaryText();
+                    else content = buildDefectsSummaryText() + '\n\n--------------------\n\n' + buildEpicsSummaryText();
+                }
             }
+
             var sendBtn = document.getElementById('gchat-modal-send-btn');
             if (sendBtn) { sendBtn.textContent = 'Sending...'; sendBtn.disabled = true; }
+            showGChatModalStatus('Sending to ' + spaceLabel + '...', '#e8f4fd', '#0c5460');
+
             google.script.run
                 .withSuccessHandler(function(result) {
                     if (result && result.success) {
-                        showGChatModalStatus('Sent to ' + spaceName + '!', '#d4edda', '#155724');
+                        showGChatModalStatus('&#9989; ' + result.message, '#d4edda', '#155724');
+                        if (sendBtn) { sendBtn.textContent = '&#9989; Sent!'; sendBtn.style.background = '#28a745'; }
+                        setTimeout(function() { closeGoogleChatModal(); }, 2000);
                     } else {
                         var msg = (result && result.message) ? result.message : 'Failed to send.';
-                        showGChatModalStatus(msg, '#f8d7da', '#721c24');
+                        showGChatModalStatus('&#10060; ' + msg, '#f8d7da', '#721c24');
+                        if (sendBtn) { sendBtn.textContent = 'Send 🚀'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
                     }
-                    if (sendBtn) { sendBtn.textContent = 'Send 🚀'; sendBtn.disabled = false; }
                 })
                 .withFailureHandler(function(error) {
-                    showGChatModalStatus('Error: ' + (error.message || error), '#f8d7da', '#721c24');
-                    if (sendBtn) { sendBtn.textContent = 'Send 🚀'; sendBtn.disabled = false; }
+                    showGChatModalStatus('&#10060; Error: ' + (error.message || error), '#f8d7da', '#721c24');
+                    if (sendBtn) { sendBtn.textContent = 'Send 🚀'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
                 })
-                .sendToGoogleChat(spaceName, content);
+                .sendToGoogleChat(spaceId, content);
         }
 
         function showGChatModalStatus(message, bgColor, textColor) {
@@ -7182,7 +7233,7 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 statusDiv.style.display = 'block';
                 statusDiv.style.background = bgColor;
                 statusDiv.style.color = textColor;
-                statusDiv.textContent = message;
+                statusDiv.innerHTML = message;
             }
         }
 
@@ -7373,6 +7424,7 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
 
         // Track which panel triggered the Slack modal
         var _slackSourceType = '';
+        var _gchatSourceType = '';
 
         // Build and show the Slack modal
         function openSlackModal(sourceType) {

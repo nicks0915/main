@@ -447,7 +447,52 @@ function findTestingColumnIndex(headers, possibleNames) {
   return -1; // Not found
 }
 
-function sendToGoogleChat(spaceName, content) {
-  // TODO: implement with Google Chat webhook/API
-  return { success: false, message: 'Google Chat integration coming soon' };
+/**
+ * Get configured Google Chat spaces from Core.gs CONFIG.GCHAT.spaces
+ * Called from the frontend to populate the space list in the modal.
+ * @returns {Array} Array of {id, name} space objects
+ */
+function getGChatSpaces() {
+  if (!CONFIG.GCHAT || !CONFIG.GCHAT.spaces || CONFIG.GCHAT.spaces.length === 0) return [];
+  return CONFIG.GCHAT.spaces;
+}
+
+/**
+ * Send content to a Google Chat space via its configured incoming webhook.
+ * @param {string} spaceId  - The space id from CONFIG.GCHAT.spaces (e.g. 'testspace')
+ * @param {string} content  - Plain text content to post (supports *bold*, emoji)
+ * @returns {object} { success, message }
+ */
+function sendToGoogleChat(spaceId, content) {
+  try {
+    var spaces = (CONFIG.GCHAT && CONFIG.GCHAT.spaces) ? CONFIG.GCHAT.spaces : [];
+    var space = null;
+    for (var i = 0; i < spaces.length; i++) {
+      if (spaces[i].id === spaceId) { space = spaces[i]; break; }
+    }
+    if (!space) throw new Error('Space not configured: ' + spaceId);
+
+    var webhookUrl = PropertiesService.getScriptProperties().getProperty(space.webhookProperty);
+    if (!webhookUrl) {
+      throw new Error(space.webhookProperty + ' not set in Script Properties. ' +
+        'Create a webhook in Google Chat → Apps & integrations and store the URL there.');
+    }
+
+    var response = UrlFetchApp.fetch(webhookUrl, {
+      method: 'POST',
+      contentType: 'application/json',
+      payload: JSON.stringify({ text: content }),
+      muteHttpExceptions: true
+    });
+
+    var code = response.getResponseCode();
+    if (code === 200) {
+      return { success: true, message: 'Sent to ' + space.name + ' successfully!' };
+    } else {
+      throw new Error('HTTP ' + code + ': ' + response.getContentText());
+    }
+  } catch (error) {
+    console.error('sendToGoogleChat error:', error);
+    return { success: false, message: 'Failed to send to Google Chat: ' + error.message };
+  }
 }

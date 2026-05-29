@@ -51,6 +51,18 @@ const CONFIG = {
       // Example: { id: 'CXXXXXXXXX', name: 'My New Channel' }
     ]
     // Bot Token is stored in Script Properties as 'SLACK_BOT_TOKEN'
+  },
+
+  GCHAT: {
+    // ===== GOOGLE CHAT SPACES =====
+    // Each entry needs an id (lowercase slug), name (display), and webhookProperty
+    // (Script Properties key holding the incoming webhook URL for that space).
+    // To add a space: create a webhook in Google Chat → Apps & integrations,
+    // store the URL in Script Properties under the webhookProperty key.
+    spaces: [
+      { id: 'testspace', name: 'TestSpace', webhookProperty: 'GCHAT_WEBHOOK_TESTSPACE' }
+      // Example: { id: 'myspace', name: 'My Space', webhookProperty: 'GCHAT_WEBHOOK_MYSPACE' }
+    ]
   }
 };
 
