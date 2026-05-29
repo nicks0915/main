@@ -1026,41 +1026,59 @@
         <!-- Project Matrix Tab Content -->
         <div class="tab-content" id="project-status-content" style="min-height:400px;">
             <div class="container">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding-top:10px;">
+
+                <!-- Executive Status Panel (full-width) -->
+                <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #e1e5e9;padding-bottom:12px;margin-bottom:14px;">
+                        <h3 style="margin:0;color:#333;">&#128203; Executive Status</h3>
+                        <button id="executive-summary-btn" class="btn" style="background:#555;padding:6px 14px;font-size:14px;font-weight:600;">&#128260; Generate</button>
+                    </div>
+                    <div id="executive-textbox" contenteditable="true" style="background:#f8f9fa;border:2px solid #e1e5e9;border-radius:8px;padding:16px;min-height:180px;max-height:400px;overflow-y:auto;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;outline:none;"><p style="color:#999;font-style:italic;text-align:center;margin-top:40px;">Type here or click Generate to combine Defects + Work Items</p></div>
+                    <div id="executive-emoji-toolbar" style="display:flex;margin-top:10px;gap:6px;align-items:center;flex-wrap:wrap;">
+                        <button onclick="toggleEditPanel('executive')" title="Edit text" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#9999;&#65039;</button>
+                        <button onclick="resetPanel('executive')" title="Regenerate" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#128260;</button>
+                        <button onclick="openSlackModal('executive')" title="Send to Slack" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 8px;cursor:pointer;display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.8 122.8" width="18" height="18"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"/><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"/><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C77.6 5.8 83.4 0 90.5 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"/><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"/></svg></button>
+                        <button onclick="openGoogleChatModal('executive')" title="Send to Google Chat" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 8px;cursor:pointer;display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="#1A73E8"/><circle cx="8" cy="11" r="1.5" fill="#fff"/><circle cx="12" cy="11" r="1.5" fill="#fff"/><circle cx="16" cy="11" r="1.5" fill="#fff"/></svg></button>
+                        <button onclick="clearPanel('executive')" title="Clear" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#128465;&#65039;</button>
+                    </div>
+                </div>
+
+                <!-- Defects + Work Items side-by-side -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
 
                     <!-- Defects Panel -->
                     <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
                         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #e1e5e9;padding-bottom:12px;margin-bottom:14px;">
-                            <h3 style="margin:0;color:#dc3545;">🐛 Defects Status</h3>
-                            <button id="defects-summary-btn" class="btn" style="background:#dc3545;padding:6px 14px;font-size:14px;font-weight:600;">🔄 Generate</button>
+                            <h3 style="margin:0;color:#dc3545;">&#128027; Defects Status</h3>
+                            <button id="defects-summary-btn" class="btn" style="background:#dc3545;padding:6px 14px;font-size:14px;font-weight:600;">&#128260; Generate</button>
                         </div>
                         <div id="defects-textbox" style="background:#f8f9fa;border:2px solid #e1e5e9;border-radius:8px;padding:16px;min-height:300px;max-height:480px;overflow-y:auto;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;">
                             <p style="color:#999;font-style:italic;text-align:center;margin-top:80px;">Click Generate to load</p>
                         </div>
                         <div id="defects-emoji-toolbar" style="display:none;margin-top:10px;gap:6px;align-items:center;flex-wrap:wrap;">
-                            <button onclick="toggleEditPanel('defects')" title="Edit text" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">✏️</button>
-                            <button onclick="resetPanel('defects')" title="Reset to latest data" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">🔄</button>
-                            <button onclick="openSlackModal('defects')" title="Send to Slack" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">💬</button>
-                            <button onclick="openGoogleChatModal('defects')" title="Send to Google Chat" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">📢</button>
-                            <button onclick="clearPanel('defects')" title="Clear" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">🗑️</button>
+                            <button onclick="toggleEditPanel('defects')" title="Edit text" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#9999;&#65039;</button>
+                            <button onclick="resetPanel('defects')" title="Reset to latest data" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#128260;</button>
+                            <button onclick="openSlackModal('defects')" title="Send to Slack" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 8px;cursor:pointer;display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.8 122.8" width="18" height="18"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"/><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"/><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C77.6 5.8 83.4 0 90.5 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"/><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"/></svg></button>
+                            <button onclick="openGoogleChatModal('defects')" title="Send to Google Chat" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 8px;cursor:pointer;display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="#1A73E8"/><circle cx="8" cy="11" r="1.5" fill="#fff"/><circle cx="12" cy="11" r="1.5" fill="#fff"/><circle cx="16" cy="11" r="1.5" fill="#fff"/></svg></button>
+                            <button onclick="clearPanel('defects')" title="Clear" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#128465;&#65039;</button>
                         </div>
                     </div>
 
                     <!-- Work Items Panel -->
                     <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
                         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #e1e5e9;padding-bottom:12px;margin-bottom:14px;">
-                            <h3 style="margin:0;color:#007bff;">📊 Work Items Status</h3>
-                            <button id="epics-summary-btn" class="btn" style="background:#007bff;padding:6px 14px;font-size:14px;font-weight:600;">🔄 Generate</button>
+                            <h3 style="margin:0;color:#007bff;">&#128202; Work Items Status</h3>
+                            <button id="epics-summary-btn" class="btn" style="background:#007bff;padding:6px 14px;font-size:14px;font-weight:600;">&#128260; Generate</button>
                         </div>
                         <div id="epics-textbox" style="background:#f8f9fa;border:2px solid #e1e5e9;border-radius:8px;padding:16px;min-height:300px;max-height:480px;overflow-y:auto;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;">
                             <p style="color:#999;font-style:italic;text-align:center;margin-top:80px;">Click Generate to load</p>
                         </div>
                         <div id="epics-emoji-toolbar" style="display:none;margin-top:10px;gap:6px;align-items:center;flex-wrap:wrap;">
-                            <button onclick="toggleEditPanel('epics')" title="Edit text" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">✏️</button>
-                            <button onclick="resetPanel('epics')" title="Reset to latest data" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">🔄</button>
-                            <button onclick="openSlackModal('epics')" title="Send to Slack" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">💬</button>
-                            <button onclick="openGoogleChatModal('epics')" title="Send to Google Chat" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">📢</button>
-                            <button onclick="clearPanel('epics')" title="Clear" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">🗑️</button>
+                            <button onclick="toggleEditPanel('epics')" title="Edit text" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#9999;&#65039;</button>
+                            <button onclick="resetPanel('epics')" title="Reset to latest data" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#128260;</button>
+                            <button onclick="openSlackModal('epics')" title="Send to Slack" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 8px;cursor:pointer;display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.8 122.8" width="18" height="18"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"/><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"/><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C77.6 5.8 83.4 0 90.5 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"/><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"/></svg></button>
+                            <button onclick="openGoogleChatModal('epics')" title="Send to Google Chat" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 8px;cursor:pointer;display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="#1A73E8"/><circle cx="8" cy="11" r="1.5" fill="#fff"/><circle cx="12" cy="11" r="1.5" fill="#fff"/><circle cx="16" cy="11" r="1.5" fill="#fff"/></svg></button>
+                            <button onclick="clearPanel('epics')" title="Clear" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#128465;&#65039;</button>
                         </div>
                     </div>
 
@@ -6979,6 +6997,16 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
         }
 
         // Panel helper functions
+
+        // Read live text from a panel box, returning '' for placeholder/empty state
+        function getPanelText(panelId) {
+            var box = document.getElementById(panelId + '-textbox');
+            if (!box) return '';
+            // Placeholder state: single <p> child only
+            if (box.childNodes.length === 1 && box.firstChild.nodeName === 'P') return '';
+            return (box.innerText || box.textContent || '').trim();
+        }
+
         function showEmojiToolbar(panelId) {
             var toolbar = document.getElementById(panelId + '-emoji-toolbar');
             if (toolbar) toolbar.style.display = 'flex';
@@ -6995,18 +7023,36 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
 
         function resetPanel(panelId) {
             if (panelId === 'defects') generateDefectsSummary();
-            else generateEpicsSummary();
+            else if (panelId === 'epics') generateEpicsSummary();
+            else if (panelId === 'executive') generateExecutiveSummary();
         }
 
         function clearPanel(panelId) {
             var box = document.getElementById(panelId + '-textbox');
             if (box) {
-                box.innerHTML = '<p style="color:#999;font-style:italic;text-align:center;margin-top:80px;">Click Generate to load</p>';
-                box.contentEditable = 'false';
+                if (panelId === 'executive') {
+                    box.innerHTML = '<p style="color:#999;font-style:italic;text-align:center;margin-top:40px;">Type here or click Generate to combine Defects + Work Items</p>';
+                    box.contentEditable = 'true';
+                } else {
+                    box.innerHTML = '<p style="color:#999;font-style:italic;text-align:center;margin-top:80px;">Click Generate to load</p>';
+                    box.contentEditable = 'false';
+                }
                 box.style.border = '2px solid #e1e5e9';
             }
-            var toolbar = document.getElementById(panelId + '-emoji-toolbar');
-            if (toolbar) toolbar.style.display = 'none';
+            // Executive toolbar is always visible; others hide when cleared
+            if (panelId !== 'executive') {
+                var toolbar = document.getElementById(panelId + '-emoji-toolbar');
+                if (toolbar) toolbar.style.display = 'none';
+            }
+        }
+
+        // Generate Executive Status by combining Defects + Work Items panel text
+        function generateExecutiveSummary() {
+            var box = document.getElementById('executive-textbox');
+            if (!box) return;
+            var defectsText = getPanelText('defects') || buildDefectsSummaryText();
+            var epicsText = getPanelText('epics') || buildEpicsSummaryText();
+            box.textContent = defectsText + '\n\n--------------------\n\n' + epicsText;
         }
 
         function openGoogleChatModal(sourceType) {
@@ -7019,7 +7065,7 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             modal.innerHTML =
                 '<div style="background:#fff;border-radius:12px;padding:32px;width:400px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:inherit;">' +
                 '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">' +
-                '<h2 style="margin:0;font-size:20px;color:#1a1a2e;">&#128226; Send to Google Chat</h2>' +
+                '<h2 style="margin:0;font-size:20px;color:#1a1a2e;display:flex;align-items:center;gap:10px;"><svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' width=\'22\' height=\'22\'><path d=\'M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z\' fill=\'#1A73E8\'/><circle cx=\'8\' cy=\'11\' r=\'1.5\' fill=\'#fff\'/><circle cx=\'12\' cy=\'11\' r=\'1.5\' fill=\'#fff\'/><circle cx=\'16\' cy=\'11\' r=\'1.5\' fill=\'#fff\'/></svg> Send to Google Chat</h2>' +
                 '<button onclick="closeGoogleChatModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#666;line-height:1;">&times;</button>' +
                 '</div>' +
                 '<div style="margin-bottom:20px;">' +
@@ -7055,10 +7101,13 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 return;
             }
             var spaceName = selectedSpace.value;
-            var content = '';
-            if (sourceType === 'defects') content = buildDefectsSummaryText();
-            else if (sourceType === 'epics') content = buildEpicsSummaryText();
-            else content = buildDefectsSummaryText() + '\n\n' + buildEpicsSummaryText();
+            // Read from live textbox first (respects edits); fall back to rebuild
+            var content = getPanelText(sourceType);
+            if (!content) {
+                if (sourceType === 'defects') content = buildDefectsSummaryText();
+                else if (sourceType === 'epics') content = buildEpicsSummaryText();
+                else content = buildDefectsSummaryText() + '\n\n--------------------\n\n' + buildEpicsSummaryText();
+            }
             var sendBtn = document.getElementById('gchat-modal-send-btn');
             if (sendBtn) { sendBtn.textContent = 'Sending...'; sendBtn.disabled = true; }
             google.script.run
@@ -7108,6 +7157,13 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             if (epicsSummaryBtn) {
                 epicsSummaryBtn.addEventListener('click', function() {
                     generateEpicsSummary();
+                });
+            }
+
+            var executiveSummaryBtn = document.getElementById('executive-summary-btn');
+            if (executiveSummaryBtn) {
+                executiveSummaryBtn.addEventListener('click', function() {
+                    generateExecutiveSummary();
                 });
             }
         });
@@ -7266,68 +7322,45 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             openSlackModal();
         }
 
+        // Track which panel triggered the Slack modal
+        var _slackSourceType = '';
+
         // Build and show the Slack modal
         function openSlackModal(sourceType) {
             // Remove existing modal if any
             var existing = document.getElementById('slack-send-modal');
             if (existing) existing.remove();
 
-            // Pre-check the content type(s) based on sourceType arg or currentSummaryType
-            var effectiveType = sourceType || currentSummaryType;
-            var defectsPreChecked = (effectiveType === 'defects' || effectiveType === 'both') ? 'checked' : '';
-            var epicsPreChecked   = (effectiveType === 'epics'   || effectiveType === 'both') ? 'checked' : '';
-            const contentOptions = `
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #e1e5e9;margin-bottom:8px;background:#fff;">
-                    <input type="checkbox" id="slack-send-defects" value="defects" ${defectsPreChecked} style="width:16px;height:16px;accent-color:#4A154B;">
-                    <span>🐛 <strong>Defects Status</strong></span>
-                </label>
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #e1e5e9;margin-bottom:8px;background:#fff;">
-                    <input type="checkbox" id="slack-send-epics" value="epics" ${epicsPreChecked} style="width:16px;height:16px;accent-color:#4A154B;">
-                    <span>📊 <strong>Work Items Status</strong></span>
-                </label>`;
+            // Store source so confirmSendToSlack knows what content to send
+            _slackSourceType = sourceType || currentSummaryType || 'defects';
 
-            const modal = document.createElement('div');
+            var modal = document.createElement('div');
             modal.id = 'slack-send-modal';
-            modal.style.cssText = `
-                position:fixed;top:0;left:0;width:100%;height:100%;
-                background:rgba(0,0,0,0.55);z-index:99999;
-                display:flex;align-items:center;justify-content:center;
-            `;
-            modal.innerHTML = `
-                <div style="background:#fff;border-radius:12px;padding:32px;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:inherit;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-                        <h2 style="margin:0;font-size:20px;color:#1a1a2e;">💬 Send to Slack</h2>
-                        <button onclick="closeSlackModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#666;line-height:1;">&times;</button>
-                    </div>
-
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block;font-weight:600;color:#333;margin-bottom:10px;font-size:14px;">📋 What to send?</label>
-                        <div id="slack-content-options">
-                            ${contentOptions}
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom:24px;">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                            <label style="font-weight:600;color:#333;font-size:14px;">📢 Which channel(s)?</label>
-                            <div style="display:flex;gap:8px;">
-                                <button onclick="selectAllSlackChannels(true)" style="padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:#f7f7f7;color:#333;font-size:12px;cursor:pointer;">Select All</button>
-                                <button onclick="selectAllSlackChannels(false)" style="padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:#f7f7f7;color:#333;font-size:12px;cursor:pointer;">Clear</button>
-                            </div>
-                        </div>
-                        <div id="slack-channel-checkboxes" style="max-height:180px;overflow-y:auto;border:1px solid #e1e5e9;border-radius:8px;padding:8px;">
-                            <p style="color:#888;font-size:14px;margin:0;text-align:center;">⏳ Loading channels...</p>
-                        </div>
-                    </div>
-
-                    <div id="slack-modal-status" style="display:none;padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:14px;"></div>
-
-                    <div style="display:flex;gap:12px;justify-content:flex-end;">
-                        <button onclick="closeSlackModal()" style="padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;font-size:14px;cursor:pointer;font-weight:500;">Cancel</button>
-                        <button id="slack-modal-send-btn" onclick="confirmSendToSlack()" style="padding:10px 24px;border:none;border-radius:6px;background:#4A154B;color:#fff;font-size:14px;cursor:pointer;font-weight:600;">Send 🚀</button>
-                    </div>
-                </div>
-            `;
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;';
+            modal.innerHTML =
+                '<div style="background:#fff;border-radius:12px;padding:32px;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:inherit;">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">' +
+                '<h2 style="margin:0;font-size:20px;color:#1a1a2e;display:flex;align-items:center;gap:10px;"><svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 122.8 122.8\' width=\'22\' height=\'22\'><path d=\'M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z\' fill=\'#e01e5a\'/><path d=\'M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z\' fill=\'#36c5f0\'/><path d=\'M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C77.6 5.8 83.4 0 90.5 0s12.9 5.8 12.9 12.9v32.3z\' fill=\'#2eb67d\'/><path d=\'M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z\' fill=\'#ecb22e\'/></svg> Send to Slack</h2>' +
+                '<button onclick="closeSlackModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#666;line-height:1;">&times;</button>' +
+                '</div>' +
+                '<div style="margin-bottom:24px;">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+                '<label style="font-weight:600;color:#333;font-size:14px;">&#128226; Which channel(s)?</label>' +
+                '<div style="display:flex;gap:8px;">' +
+                '<button onclick="selectAllSlackChannels(true)" style="padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:#f7f7f7;color:#333;font-size:12px;cursor:pointer;">Select All</button>' +
+                '<button onclick="selectAllSlackChannels(false)" style="padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:#f7f7f7;color:#333;font-size:12px;cursor:pointer;">Clear</button>' +
+                '</div>' +
+                '</div>' +
+                '<div id="slack-channel-checkboxes" style="max-height:220px;overflow-y:auto;border:1px solid #e1e5e9;border-radius:8px;padding:8px;">' +
+                '<p style="color:#888;font-size:14px;margin:0;text-align:center;">&#9203; Loading channels...</p>' +
+                '</div>' +
+                '</div>' +
+                '<div id="slack-modal-status" style="display:none;padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:14px;"></div>' +
+                '<div style="display:flex;gap:12px;justify-content:flex-end;">' +
+                '<button onclick="closeSlackModal()" style="padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;font-size:14px;cursor:pointer;font-weight:500;">Cancel</button>' +
+                '<button id="slack-modal-send-btn" onclick="confirmSendToSlack()" style="padding:10px 24px;border:none;border-radius:6px;background:#4A154B;color:#fff;font-size:14px;cursor:pointer;font-weight:600;">Send &#128640;</button>' +
+                '</div>' +
+                '</div>';
 
             document.body.appendChild(modal);
 
@@ -7389,58 +7422,32 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
         }
 
         function confirmSendToSlack() {
-            // Determine what to send
-            const defectsChecked = document.getElementById('slack-send-defects') && document.getElementById('slack-send-defects').checked;
-            const epicsChecked = document.getElementById('slack-send-epics') && document.getElementById('slack-send-epics').checked;
-
-            if (!defectsChecked && !epicsChecked) {
-                showSlackModalStatus('⚠️ Please select at least one item to send.', '#fff3cd', '#856404');
-                return;
-            }
-
-            // Collect all checked channel IDs (multi-select checkboxes)
-            const checkedChannels = Array.from(
+            // Collect all checked channel IDs
+            var checkedChannels = Array.from(
                 document.querySelectorAll('.slack-channel-checkbox:checked')
             ).map(function(cb) { return cb.value; });
 
             if (checkedChannels.length === 0) {
-                showSlackModalStatus('⚠️ Please select at least one channel.', '#fff3cd', '#856404');
+                showSlackModalStatus('Please select at least one channel.', '#fff3cd', '#856404');
                 return;
             }
 
-            // Generate summaries on-the-fly if needed (so both can always be sent
-            // regardless of which summary button was last clicked)
-            if (defectsChecked) {
-                // Generate defects summary text silently (without updating the textbox)
-                currentDefectsSummaryText = buildDefectsSummaryText();
+            // Read content from the live textbox (respects edits); fall back to rebuild
+            var sourceType = _slackSourceType || 'defects';
+            var summaryToSend = getPanelText(sourceType);
+            if (!summaryToSend) {
+                if (sourceType === 'defects') summaryToSend = buildDefectsSummaryText();
+                else if (sourceType === 'epics') summaryToSend = buildEpicsSummaryText();
+                else summaryToSend = buildDefectsSummaryText() + '\n\n--------------------\n\n' + buildEpicsSummaryText();
             }
-            if (epicsChecked) {
-                // Generate epics summary text silently
-                currentEpicsSummaryText = buildEpicsSummaryText();
-            }
-
-            // Determine what combined text to send
-            let summaryToSend = '';
-            let sendType = '';
-            if (defectsChecked && epicsChecked) {
-                summaryToSend = currentDefectsSummaryText + '\n\n---\n\n' + currentEpicsSummaryText;
-                sendType = 'both';
-            } else if (defectsChecked) {
-                summaryToSend = currentDefectsSummaryText;
-                sendType = 'defects';
-            } else {
-                summaryToSend = currentEpicsSummaryText;
-                sendType = 'epics';
-            }
+            var sendType = (sourceType === 'executive') ? 'both' : sourceType;
 
             // Disable send button and show loading
-            const sendBtn = document.getElementById('slack-modal-send-btn');
-            sendBtn.textContent = '⏳ Sending...';
+            var sendBtn = document.getElementById('slack-modal-send-btn');
+            sendBtn.textContent = 'Sending...';
             sendBtn.disabled = true;
 
-            const channelLabel = checkedChannels.length === 1
-                ? '1 channel'
-                : checkedChannels.length + ' channels';
+            var channelLabel = checkedChannels.length === 1 ? '1 channel' : checkedChannels.length + ' channels';
             showSlackModalStatus('Sending to ' + channelLabel + '...', '#e8f4fd', '#0c5460');
 
             google.script.run
