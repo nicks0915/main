@@ -116,34 +116,26 @@ function formatSlackMessage(summaryText, summaryType) {
     ? summaryText
     : '```\n' + summaryText + '\n```';
 
+  // Build blocks: executive type has no header block (content speaks for itself)
+  const blocks = [];
+  if (summaryType !== 'executive') {
+    blocks.push({
+      type: 'header',
+      text: { type: 'plain_text', text: `${emoji} ${title}`, emoji: true }
+    });
+  }
+  blocks.push({
+    type: 'section',
+    text: { type: 'mrkdwn', text: bodyText }
+  });
+  blocks.push({
+    type: 'context',
+    elements: [{ type: 'mrkdwn', text: `Sent from Optik on Green Dashboard | ${timestamp}` }]
+  });
+
   return {
-    text: `${emoji} ${title}`,
-    blocks: [
-      {
-        type: 'header',
-        text: {
-          type: 'plain_text',
-          text: `${emoji} ${title}`,
-          emoji: true
-        }
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: bodyText
-        }
-      },
-      {
-        type: 'context',
-        elements: [
-          {
-            type: 'mrkdwn',
-            text: `Sent from Optik on Green Dashboard | ${timestamp}`
-          }
-        ]
-      }
-    ]
+    text: summaryType === 'executive' ? summaryText.substring(0, 150) : `${emoji} ${title}`,
+    blocks
   };
 }
 
@@ -358,8 +350,11 @@ function formatSlackText(text) {
   // 3. Bare URL links: <https://...> → remove
   text = text.replace(/<https?:[^>]+>/g, '');
 
-  // 4. User mentions: <@UXXXXXXX> → remove
-  text = text.replace(/<@[A-Z0-9]+>/g, '');
+  // 4. User mentions: <@UXXXXXXX> or <@UXXXXXXX|display_name> → {MENTION_UID|name}
+  //    Preserves the user ID so the mention can be restored when resending to Slack.
+  text = text.replace(/<@([A-Z0-9]+)(?:\|([^>]*))?>/g, function(match, uid, name) {
+    return '{MENTION_' + uid + (name ? '|' + name : '') + '}';
+  });
 
   // 5. Channel links: <#CXXXXXXX|channel-name> → #channel-name
   text = text.replace(/<#[A-Z0-9]+\|([^>]+)>/g, '#$1');

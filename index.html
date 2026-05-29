@@ -7013,6 +7013,12 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 .replace(/\{CIRCLE_RED\}/g,    '<span style="color:#dc3545;font-size:1.2em;vertical-align:middle;line-height:1;">&#9679;</span>')
                 .replace(/\{CIRCLE_ORANGE\}/g, '<span style="color:#fd7e14;font-size:1.2em;vertical-align:middle;line-height:1;">&#9679;</span>')
                 .replace(/\{CIRCLE_BLUE\}/g,   '<span style="color:#007bff;font-size:1.2em;vertical-align:middle;line-height:1;">&#9679;</span>');
+            // Render user mentions: {MENTION_UID} or {MENTION_UID|display_name} → styled @name span
+            // data-slack-uid stores the Slack user ID so getExecutivePanelTextAsSlack() can restore <@UID>
+            escaped = escaped.replace(/\{MENTION_([A-Z0-9]+)(?:\|([^}]*))?\}/g, function(m, uid, name) {
+                var display = name ? name : uid;
+                return '<span data-slack-uid="' + uid + '" style="color:#1264A3;text-decoration:underline;cursor:default;">@' + display + '</span>';
+            });
             // Convert *bold* → <strong>bold</strong> (no space after/before the *)
             return escaped.replace(/\*(?!\s)([^*\n]+?)(?<!\s)\*/g, '<strong>$1</strong>');
         }
@@ -7471,6 +7477,9 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             if (!box) return '';
             if (box.childNodes.length === 1 && box.firstChild.nodeName === 'P') return '';
             var html = box.innerHTML;
+
+            // User mention spans → <@UID> (restores Slack tagging)
+            html = html.replace(/<span[^>]*data-slack-uid="([A-Z0-9]+)"[^>]*>@?[^<]*<\/span>/g, '<@$1>');
 
             // Colored circle spans → Slack emoji codes (match by color value in style attr)
             html = html.replace(/<span[^>]*color:#28a745[^>]*>[^<]*<\/span>/g, ':large_green_circle:');
