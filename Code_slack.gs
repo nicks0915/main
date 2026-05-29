@@ -295,7 +295,7 @@ function fetchExecutiveStatusFromSlack() {
       if (keywords.some(function(k) { return lower.indexOf(k) !== -1; })) {
         return {
           success: true,
-          text: formatSlackText(msg.text),
+          text: formatSlackText(resolveSlackUserMentions(msg.text, botToken)),
           postedAt: new Date(parseFloat(msg.ts) * 1000).toLocaleString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric',
             hour: '2-digit', minute: '2-digit'
@@ -310,7 +310,7 @@ function fetchExecutiveStatusFromSlack() {
       if (m.type === 'message' && !m.subtype && m.text) {
         return {
           success: true,
-          text: formatSlackText(m.text),
+          text: formatSlackText(resolveSlackUserMentions(m.text, botToken)),
           postedAt: new Date(parseFloat(m.ts) * 1000).toLocaleString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric',
             hour: '2-digit', minute: '2-digit'
@@ -325,6 +325,49 @@ function fetchExecutiveStatusFromSlack() {
   } catch (error) {
     return { success: false, message: 'Error fetching from Slack: ' + error.message };
   }
+}
+
+/**
+ * Resolve bare Slack user IDs (<@UXXXXXXX> with no |name) to display names
+ * by calling users.info for each unique ID found in the text.
+ * Requires users:read scope on the bot token.
+ * If a lookup fails the bare mention is left unchanged.
+ */
+function resolveSlackUserMentions(text, botToken) {
+  if (!text) return text;
+
+  // Collect unique bare user IDs — <@UID> without a |name suffix
+  var seen = {};
+  var re = /<@([A-Z0-9]+)(?!\|)>/g;
+  var match;
+  while ((match = re.exec(text)) !== null) {
+    seen[match[1]] = true;
+  }
+
+  var uids = Object.keys(seen);
+  if (uids.length === 0) return text;
+
+  uids.forEach(function(uid) {
+    try {
+      var resp = UrlFetchApp.fetch(
+        'https://slack.com/api/users.info?user=' + uid,
+        { method: 'GET', headers: { 'Authorization': 'Bearer ' + botToken }, muteHttpExceptions: true }
+      );
+      var data = JSON.parse(resp.getContentText());
+      if (data.ok && data.user) {
+        var name = data.user.profile.display_name
+                || data.user.profile.real_name
+                || data.user.name
+                || uid;
+        // Replace all bare <@UID> with <@UID|name> so formatSlackText picks up the name
+        text = text.split('<@' + uid + '>').join('<@' + uid + '|' + name + '>');
+      }
+    } catch (e) {
+      // leave as-is; formatSlackText will render @UID as fallback
+    }
+  });
+
+  return text;
 }
 
 /**
