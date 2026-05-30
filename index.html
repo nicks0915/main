@@ -7313,8 +7313,9 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             google.script.run
                 .withSuccessHandler(function(result) {
                     if (result && result.success) {
+                        var cb = _pinVerifiedCallback; // capture before closePinModal() clears it
                         closePinModal();
-                        if (typeof _pinVerifiedCallback === 'function') _pinVerifiedCallback();
+                        if (typeof cb === 'function') cb();
                     } else {
                         if (errorDiv) { errorDiv.style.display = 'block'; errorDiv.textContent = '❌ Incorrect PIN. Please try again.'; }
                         if (input) { input.value = ''; input.focus(); }
