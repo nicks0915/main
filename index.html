@@ -7221,28 +7221,31 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 }
             }
 
-            var sendBtn = document.getElementById('gchat-modal-send-btn');
-            if (sendBtn) { sendBtn.textContent = 'Sending...'; sendBtn.disabled = true; }
-            var spaceLabel = checkedSpaces.length === 1 ? '1 space' : checkedSpaces.length + ' spaces';
-            showGChatModalStatus('Sending to ' + spaceLabel + '...', '#e8f4fd', '#0c5460');
-
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    if (result && result.success) {
-                        showGChatModalStatus('&#9989; ' + result.message, '#d4edda', '#155724');
-                        if (sendBtn) { sendBtn.textContent = '&#9989; Sent!'; sendBtn.style.background = '#28a745'; }
-                        setTimeout(function() { closeGoogleChatModal(); }, 2000);
-                    } else {
-                        var msg = (result && result.message) ? result.message : 'Failed to send.';
-                        showGChatModalStatus('&#10060; ' + msg, '#f8d7da', '#721c24');
+            function doGChatSend() {
+                var sendBtn = document.getElementById('gchat-modal-send-btn');
+                if (sendBtn) { sendBtn.textContent = 'Sending...'; sendBtn.disabled = true; }
+                var spaceLabel = checkedSpaces.length === 1 ? '1 space' : checkedSpaces.length + ' spaces';
+                showGChatModalStatus('Sending to ' + spaceLabel + '...', '#e8f4fd', '#0c5460');
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        if (result && result.success) {
+                            showGChatModalStatus('&#9989; ' + result.message, '#d4edda', '#155724');
+                            if (sendBtn) { sendBtn.textContent = '&#9989; Sent!'; sendBtn.style.background = '#28a745'; }
+                            setTimeout(function() { closeGoogleChatModal(); }, 2000);
+                        } else {
+                            var msg = (result && result.message) ? result.message : 'Failed to send.';
+                            showGChatModalStatus('&#10060; ' + msg, '#f8d7da', '#721c24');
+                            if (sendBtn) { sendBtn.textContent = 'Send &#128640;'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        showGChatModalStatus('&#10060; Error: ' + (error.message || error), '#f8d7da', '#721c24');
                         if (sendBtn) { sendBtn.textContent = 'Send &#128640;'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
-                    }
-                })
-                .withFailureHandler(function(error) {
-                    showGChatModalStatus('&#10060; Error: ' + (error.message || error), '#f8d7da', '#721c24');
-                    if (sendBtn) { sendBtn.textContent = 'Send &#128640;'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
-                })
-                .sendToGoogleChatToSpaces(checkedSpaces, content);
+                    })
+                    .sendToGoogleChatToSpaces(checkedSpaces, content);
+            }
+
+            showPinModal(doGChatSend);
         }
 
         function showGChatModalStatus(message, bgColor, textColor) {
@@ -7253,6 +7256,76 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 statusDiv.style.color = textColor;
                 statusDiv.innerHTML = message;
             }
+        }
+
+        // ===== PIN MODAL =====
+        var _pinVerifiedCallback = null;
+
+        function showPinModal(onVerified) {
+            var existing = document.getElementById('pin-modal');
+            if (existing) existing.remove();
+            _pinVerifiedCallback = onVerified;
+
+            var overlay = document.createElement('div');
+            overlay.id = 'pin-modal';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.72);z-index:100000;display:flex;align-items:center;justify-content:center;';
+            overlay.innerHTML =
+                '<div style="background:#fff;border-radius:12px;padding:32px;width:360px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.4);font-family:inherit;">' +
+                '<h2 style="margin:0 0 8px;font-size:18px;color:#1a1a2e;">&#128274; Enter PIN to Send</h2>' +
+                '<p style="color:#666;font-size:13px;margin:0 0 20px;">A PIN is required to send messages.</p>' +
+                '<input id="pin-input" type="password" placeholder="Enter PIN" autocomplete="off" ' +
+                'style="width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid #e1e5e9;border-radius:6px;font-size:16px;margin-bottom:6px;outline:none;letter-spacing:0.2em;" />' +
+                '<div id="pin-error" style="display:none;color:#dc3545;font-size:13px;margin-bottom:14px;">&#10060; Incorrect PIN. Please try again.</div>' +
+                '<div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">' +
+                '<button onclick="closePinModal()" style="padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;font-size:14px;cursor:pointer;font-weight:500;">&#8592; Go Back</button>' +
+                '<button id="pin-submit-btn" onclick="submitPin()" style="padding:10px 24px;border:none;border-radius:6px;background:#333;color:#fff;font-size:14px;cursor:pointer;font-weight:600;">Verify &amp; Send &#128640;</button>' +
+                '</div>' +
+                '</div>';
+            document.body.appendChild(overlay);
+
+            var input = document.getElementById('pin-input');
+            if (input) {
+                setTimeout(function() { input.focus(); }, 80);
+                input.addEventListener('keydown', function(e) { if (e.key === 'Enter') submitPin(); });
+            }
+        }
+
+        function closePinModal() {
+            var modal = document.getElementById('pin-modal');
+            if (modal) modal.remove();
+            _pinVerifiedCallback = null;
+        }
+
+        function submitPin() {
+            var input = document.getElementById('pin-input');
+            var btn = document.getElementById('pin-submit-btn');
+            var errorDiv = document.getElementById('pin-error');
+            var pin = input ? input.value : '';
+
+            if (!pin) {
+                if (errorDiv) { errorDiv.style.display = 'block'; errorDiv.textContent = '❌ Please enter your PIN.'; }
+                return;
+            }
+
+            if (btn) { btn.textContent = 'Verifying...'; btn.disabled = true; }
+            if (errorDiv) errorDiv.style.display = 'none';
+
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    if (result && result.success) {
+                        closePinModal();
+                        if (typeof _pinVerifiedCallback === 'function') _pinVerifiedCallback();
+                    } else {
+                        if (errorDiv) { errorDiv.style.display = 'block'; errorDiv.textContent = '❌ Incorrect PIN. Please try again.'; }
+                        if (input) { input.value = ''; input.focus(); }
+                        if (btn) { btn.innerHTML = 'Verify &amp; Send &#128640;'; btn.disabled = false; }
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    if (errorDiv) { errorDiv.style.display = 'block'; errorDiv.textContent = '❌ Error: ' + (error.message || error); }
+                    if (btn) { btn.innerHTML = 'Verify &amp; Send &#128640;'; btn.disabled = false; }
+                })
+                .verifyPin(pin);
         }
 
         // Global variables to track current summaries (stored separately)
@@ -7581,7 +7654,6 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
         }
 
         function confirmSendToSlack() {
-            // Collect all checked channel IDs
             var checkedChannels = Array.from(
                 document.querySelectorAll('.slack-channel-checkbox:checked')
             ).map(function(cb) { return cb.value; });
@@ -7591,11 +7663,9 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                 return;
             }
 
-            // Read content from the live textbox (respects edits); fall back to rebuild
             var sourceType = _slackSourceType || 'defects';
             var summaryToSend;
             if (sourceType === 'executive') {
-                // Convert rendered HTML back to Slack mrkdwn (bold + emoji circles)
                 summaryToSend = getExecutivePanelTextAsSlack();
             } else {
                 summaryToSend = getPanelText(sourceType);
@@ -7605,37 +7675,32 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                     else summaryToSend = buildDefectsSummaryText() + '\n\n--------------------\n\n' + buildEpicsSummaryText();
                 }
             }
-            var sendType = sourceType; // 'executive', 'defects', or 'epics'
+            var sendType = sourceType;
 
-            // Disable send button and show loading
-            var sendBtn = document.getElementById('slack-modal-send-btn');
-            sendBtn.textContent = 'Sending...';
-            sendBtn.disabled = true;
+            function doSlackSend() {
+                var sendBtn = document.getElementById('slack-modal-send-btn');
+                if (sendBtn) { sendBtn.textContent = 'Sending...'; sendBtn.disabled = true; }
+                var channelLabel = checkedChannels.length === 1 ? '1 channel' : checkedChannels.length + ' channels';
+                showSlackModalStatus('Sending to ' + channelLabel + '...', '#e8f4fd', '#0c5460');
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        if (result.success) {
+                            showSlackModalStatus('✅ ' + result.message, '#d4edda', '#155724');
+                            if (sendBtn) { sendBtn.textContent = '✅ Sent!'; sendBtn.style.background = '#28a745'; }
+                            setTimeout(function() { closeSlackModal(); }, 2000);
+                        } else {
+                            showSlackModalStatus('❌ ' + result.message, '#f8d7da', '#721c24');
+                            if (sendBtn) { sendBtn.textContent = 'Send 🚀'; sendBtn.disabled = false; sendBtn.style.background = '#4A154B'; }
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        showSlackModalStatus('❌ Error: ' + (error.message || error), '#f8d7da', '#721c24');
+                        if (sendBtn) { sendBtn.textContent = 'Send 🚀'; sendBtn.disabled = false; sendBtn.style.background = '#4A154B'; }
+                    })
+                    .sendToSlackWithOptions(summaryToSend, sendType, checkedChannels);
+            }
 
-            var channelLabel = checkedChannels.length === 1 ? '1 channel' : checkedChannels.length + ' channels';
-            showSlackModalStatus('Sending to ' + channelLabel + '...', '#e8f4fd', '#0c5460');
-
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    if (result.success) {
-                        showSlackModalStatus('✅ ' + result.message, '#d4edda', '#155724');
-                        sendBtn.textContent = '✅ Sent!';
-                        sendBtn.style.background = '#28a745';
-                        setTimeout(function() { closeSlackModal(); }, 2000);
-                    } else {
-                        showSlackModalStatus('❌ ' + result.message, '#f8d7da', '#721c24');
-                        sendBtn.textContent = 'Send 🚀';
-                        sendBtn.disabled = false;
-                        sendBtn.style.background = '#4A154B';
-                    }
-                })
-                .withFailureHandler(function(error) {
-                    showSlackModalStatus('❌ Error: ' + (error.message || error), '#f8d7da', '#721c24');
-                    sendBtn.textContent = 'Send 🚀';
-                    sendBtn.disabled = false;
-                    sendBtn.style.background = '#4A154B';
-                })
-                .sendToSlackWithOptions(summaryToSend, sendType, checkedChannels);
+            showPinModal(doSlackSend);
         }
 
         // Build defects summary text without touching the UI textbox

@@ -448,6 +448,20 @@ function findTestingColumnIndex(headers, possibleNames) {
 }
 
 /**
+ * Verify a PIN entered by the user against the PIN stored in Script Properties.
+ * The stored value is never returned to the client — only a boolean result.
+ * @param {string} pin - The PIN entered by the user
+ * @returns {object} { success: true } or { success: false, message }
+ */
+function verifyPin(pin) {
+  var stored = PropertiesService.getScriptProperties().getProperty('PIN');
+  if (!stored) {
+    return { success: false, message: 'PIN not configured. Add a PIN property in Project Settings → Script Properties.' };
+  }
+  return { success: (pin === stored) };
+}
+
+/**
  * Send content to one or more Google Chat spaces.
  * Called from the frontend modal when user clicks "Send 🚀".
  * @param {Array}  spaceIds - Array of space ids from CONFIG.GCHAT.spaces
