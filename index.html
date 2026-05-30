@@ -6255,8 +6255,9 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             if (timelineData && timelineData.length > 0) {
                 renderTimeline();
             } else {
-                // Try to load from assessments cache first
-                const cached = loadAssessmentsJiraData();
+                // Try to load from assessments persisted cache
+                var persistData = loadAssessmentsPersistedData();
+                var cached = persistData && persistData.data ? persistData.data : null;
                 if (cached && cached.length > 0) {
                     timelineData = cached;
                     updateTimelineRefreshInfo();
@@ -6308,11 +6309,11 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             const infoEl = document.getElementById('timeline-jira-refresh-info');
             if (!infoEl) return;
             try {
-                const raw = localStorage.getItem('ASSESSMENTS_JIRA_DATA');
+                const raw = localStorage.getItem('vogAssessmentsJiraData');
                 if (!raw) return;
                 const parsed = JSON.parse(raw);
-                if (parsed.savedAt) {
-                    infoEl.textContent = 'Last refreshed: ' + new Date(parsed.savedAt).toLocaleString();
+                if (parsed.timestamp) {
+                    infoEl.textContent = 'Last refreshed: ' + new Date(parsed.timestamp).toLocaleString();
                 }
             } catch (e) { /* ignore */ }
         }
