@@ -7137,14 +7137,22 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             modal.id = 'google-chat-modal';
             modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;';
             modal.innerHTML =
-                '<div style="background:#fff;border-radius:12px;padding:32px;width:400px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:inherit;">' +
+                '<div style="background:#fff;border-radius:12px;padding:32px;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:inherit;">' +
                 '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">' +
                 '<h2 style="margin:0;font-size:20px;color:#1a1a2e;display:flex;align-items:center;gap:10px;"><svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' width=\'22\' height=\'22\'><path d=\'M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z\' fill=\'#1A73E8\'/><circle cx=\'8\' cy=\'11\' r=\'1.5\' fill=\'#fff\'/><circle cx=\'12\' cy=\'11\' r=\'1.5\' fill=\'#fff\'/><circle cx=\'16\' cy=\'11\' r=\'1.5\' fill=\'#fff\'/></svg> Send to Google Chat</h2>' +
                 '<button onclick="closeGoogleChatModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#666;line-height:1;">&times;</button>' +
                 '</div>' +
-                '<div style="margin-bottom:20px;">' +
-                '<label style="display:block;font-weight:600;color:#333;margin-bottom:10px;font-size:14px;">Which space?</label>' +
-                '<div id="gchat-spaces-list" style="display:flex;flex-direction:column;gap:8px;"><em style="color:#999;font-size:13px;">Loading spaces...</em></div>' +
+                '<div style="margin-bottom:24px;">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+                '<label style="font-weight:600;color:#333;font-size:14px;">&#128172; Which space(s)?</label>' +
+                '<div style="display:flex;gap:8px;">' +
+                '<button onclick="selectAllGChatSpaces(true)" style="padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:#f7f7f7;color:#333;font-size:12px;cursor:pointer;">Select All</button>' +
+                '<button onclick="selectAllGChatSpaces(false)" style="padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:#f7f7f7;color:#333;font-size:12px;cursor:pointer;">Clear</button>' +
+                '</div>' +
+                '</div>' +
+                '<div id="gchat-space-checkboxes" style="max-height:220px;overflow-y:auto;border:1px solid #e1e5e9;border-radius:8px;padding:8px;">' +
+                '<p style="color:#888;font-size:14px;margin:0;text-align:center;">&#9203; Loading spaces...</p>' +
+                '</div>' +
                 '</div>' +
                 '<div id="gchat-modal-status" style="display:none;padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:14px;"></div>' +
                 '<div style="display:flex;gap:12px;justify-content:flex-end;">' +
@@ -7155,26 +7163,34 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
             document.body.appendChild(modal);
             modal.addEventListener('click', function(e) { if (e.target === modal) closeGoogleChatModal(); });
 
-            // Load spaces dynamically from config
             google.script.run
-                .withSuccessHandler(function(spaces) {
-                    var list = document.getElementById('gchat-spaces-list');
-                    if (!list) return;
-                    if (!spaces || spaces.length === 0) {
-                        list.innerHTML = '<em style="color:#999;font-size:13px;">No spaces configured in Core.gs</em>';
-                        return;
-                    }
-                    list.innerHTML = spaces.map(function(s, i) {
-                        return '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #e1e5e9;">' +
-                            '<input type="radio" name="gchat-space" value="' + s.id + '"' + (i === 0 ? ' checked' : '') + ' style="accent-color:#1a73e8;"> ' + s.name +
-                            '</label>';
-                    }).join('');
-                })
+                .withSuccessHandler(function(spaces) { renderGChatSpaceCheckboxes(spaces); })
                 .withFailureHandler(function() {
-                    var list = document.getElementById('gchat-spaces-list');
-                    if (list) list.innerHTML = '<em style="color:#c00;font-size:13px;">Failed to load spaces</em>';
+                    var c = document.getElementById('gchat-space-checkboxes');
+                    if (c) c.innerHTML = '<p style="color:#c00;font-size:14px;margin:0;text-align:center;">Failed to load spaces</p>';
                 })
                 .getGChatSpaces();
+        }
+
+        function renderGChatSpaceCheckboxes(spaces) {
+            var container = document.getElementById('gchat-space-checkboxes');
+            if (!container) return;
+            if (!spaces || spaces.length === 0) {
+                container.innerHTML = '<p style="color:#888;font-size:14px;margin:0;text-align:center;">No spaces configured. Add spaces in Core.gs → CONFIG.GCHAT.spaces</p>';
+                return;
+            }
+            var html = '';
+            spaces.forEach(function(s, idx) {
+                html += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #e1e5e9;margin-bottom:8px;background:#fff;">' +
+                    '<input type="checkbox" class="gchat-space-checkbox" value="' + s.id + '"' + (idx === 0 ? ' checked' : '') + ' style="width:16px;height:16px;accent-color:#1a73e8;flex-shrink:0;cursor:pointer;">' +
+                    '<span style="font-size:14px;color:#333;"><strong>' + s.name + '</strong></span>' +
+                    '</label>';
+            });
+            container.innerHTML = html;
+        }
+
+        function selectAllGChatSpaces(checked) {
+            document.querySelectorAll('.gchat-space-checkbox').forEach(function(cb) { cb.checked = checked; });
         }
 
         function closeGoogleChatModal() {
@@ -7183,13 +7199,14 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
         }
 
         function confirmSendToGoogleChat() {
-            var selectedSpace = document.querySelector('input[name="gchat-space"]:checked');
-            if (!selectedSpace) {
-                showGChatModalStatus('Please select a space.', '#fff3cd', '#856404');
+            var checkedSpaces = Array.from(
+                document.querySelectorAll('.gchat-space-checkbox:checked')
+            ).map(function(cb) { return cb.value; });
+
+            if (checkedSpaces.length === 0) {
+                showGChatModalStatus('Please select at least one space.', '#fff3cd', '#856404');
                 return;
             }
-            var spaceId = selectedSpace.value;
-            var spaceLabel = selectedSpace.parentElement ? selectedSpace.parentElement.textContent.trim() : spaceId;
 
             var sourceType = _gchatSourceType || 'defects';
             var content;
@@ -7206,6 +7223,7 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
 
             var sendBtn = document.getElementById('gchat-modal-send-btn');
             if (sendBtn) { sendBtn.textContent = 'Sending...'; sendBtn.disabled = true; }
+            var spaceLabel = checkedSpaces.length === 1 ? '1 space' : checkedSpaces.length + ' spaces';
             showGChatModalStatus('Sending to ' + spaceLabel + '...', '#e8f4fd', '#0c5460');
 
             google.script.run
@@ -7217,14 +7235,14 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
                     } else {
                         var msg = (result && result.message) ? result.message : 'Failed to send.';
                         showGChatModalStatus('&#10060; ' + msg, '#f8d7da', '#721c24');
-                        if (sendBtn) { sendBtn.textContent = 'Send 🚀'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
+                        if (sendBtn) { sendBtn.textContent = 'Send &#128640;'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
                     }
                 })
                 .withFailureHandler(function(error) {
                     showGChatModalStatus('&#10060; Error: ' + (error.message || error), '#f8d7da', '#721c24');
-                    if (sendBtn) { sendBtn.textContent = 'Send 🚀'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
+                    if (sendBtn) { sendBtn.textContent = 'Send &#128640;'; sendBtn.disabled = false; sendBtn.style.background = '#1a73e8'; }
                 })
-                .sendToGoogleChat(spaceId, content);
+                .sendToGoogleChatToSpaces(checkedSpaces, content);
         }
 
         function showGChatModalStatus(message, bgColor, textColor) {

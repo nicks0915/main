@@ -448,6 +448,41 @@ function findTestingColumnIndex(headers, possibleNames) {
 }
 
 /**
+ * Send content to one or more Google Chat spaces.
+ * Called from the frontend modal when user clicks "Send 🚀".
+ * @param {Array}  spaceIds - Array of space ids from CONFIG.GCHAT.spaces
+ * @param {string} content  - Plain text content to post
+ * @returns {object} { success, message }
+ */
+function sendToGoogleChatToSpaces(spaceIds, content) {
+  try {
+    var ids = Array.isArray(spaceIds) ? spaceIds.filter(Boolean) : (spaceIds ? [spaceIds] : []);
+    if (!content || ids.length === 0) {
+      return { success: false, message: 'Missing content or no spaces selected.' };
+    }
+    var failures = [];
+    ids.forEach(function(id) {
+      var result = sendToGoogleChat(id, content);
+      if (!result.success) failures.push(id + ': ' + result.message);
+    });
+    if (failures.length === 0) {
+      var label = ids.length === 1 ? '1 space' : ids.length + ' spaces';
+      return { success: true, message: 'Sent to ' + label + ' successfully!' };
+    } else if (failures.length < ids.length) {
+      return {
+        success: true,
+        message: 'Sent to ' + (ids.length - failures.length) + ' of ' + ids.length + ' spaces. Failed: ' + failures.join(', ')
+      };
+    } else {
+      throw new Error('Failed for all spaces: ' + failures.join(', '));
+    }
+  } catch (error) {
+    console.error('sendToGoogleChatToSpaces error:', error);
+    return { success: false, message: 'Failed: ' + error.message };
+  }
+}
+
+/**
  * Get configured Google Chat spaces from Core.gs CONFIG.GCHAT.spaces
  * Called from the frontend to populate the space list in the modal.
  * @returns {Array} Array of {id, name} space objects
