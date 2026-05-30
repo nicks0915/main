@@ -61,8 +61,8 @@ const CONFIG = {
     // store the URL in Script Properties under the webhookProperty key.
     spaces: [
       { id: 'testspace', name: 'TestSpace',  webhookProperty: 'GCHAT_WEBHOOK_TESTSPACE' },
-      { id: 'optik1',   name: 'TestSpace1', webhookProperty: 'GCHAT_WEBHOOK_CIO' },
-      { id: 'optik2',   name: 'TestSpace2', webhookProperty: 'GCHAT_WEBHOOK_BUSINESS' }
+      { id: 'optik1',   name: 'Optik TV on Green', webhookProperty: 'GCHAT_WEBHOOK_CIO' },
+      { id: 'optik2',   name: 'Optik TV on Green: TCS + SMB + CIO', webhookProperty: 'GCHAT_WEBHOOK_BUSINESS' }
       // To add more: { id: 'myspace', name: 'My Space', webhookProperty: 'GCHAT_WEBHOOK_MYSPACE' }
     ]
   }
