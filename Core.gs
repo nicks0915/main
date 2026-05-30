@@ -60,8 +60,10 @@ const CONFIG = {
     // To add a space: create a webhook in Google Chat → Apps & integrations,
     // store the URL in Script Properties under the webhookProperty key.
     spaces: [
-      { id: 'testspace', name: 'TestSpace', webhookProperty: 'GCHAT_WEBHOOK_TESTSPACE' }
-      // Example: { id: 'myspace', name: 'My Space', webhookProperty: 'GCHAT_WEBHOOK_MYSPACE' }
+      { id: 'testspace', name: 'TestSpace',  webhookProperty: 'GCHAT_WEBHOOK_TESTSPACE' },
+      { id: 'optik1',   name: 'TestSpace1', webhookProperty: 'GCHAT_WEBHOOK_CIO' },
+      { id: 'optik2',   name: 'TestSpace2', webhookProperty: 'GCHAT_WEBHOOK_BUSINESS' }
+      // To add more: { id: 'myspace', name: 'My Space', webhookProperty: 'GCHAT_WEBHOOK_MYSPACE' }
     ]
   }
 };
