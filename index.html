@@ -2185,6 +2185,10 @@ function applyEpicsSorting() {
                 valueA = a['Assignee'] || '';
                 valueB = b['Assignee'] || '';
                 break;
+            case 'labels':
+                valueA = a['Labels'] || '';
+                valueB = b['Labels'] || '';
+                break;
             default:
                 valueA = '';
                 valueB = '';
@@ -2224,7 +2228,8 @@ function updateEpicsSortIndicators() {
         { id: 'epics-application', col: 'application' },
         { id: 'epics-status', col: 'status' },
         { id: 'epics-due-date', col: 'dueDate' },
-        { id: 'epics-assignee', col: 'assignee' }
+        { id: 'epics-assignee', col: 'assignee' },
+        { id: 'epics-labels', col: 'labels' }
     ];
     columns.forEach(({ id, col }) => {
         const indicator = document.getElementById(`${id}-sort-indicator`);
@@ -2250,7 +2255,8 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'epics-status-header', col: 'status' },
         { id: 'epics-start-date-header', col: 'startDate' },
         { id: 'epics-due-date-header', col: 'dueDate' },
-        { id: 'epics-assignee-header', col: 'assignee' }
+        { id: 'epics-assignee-header', col: 'assignee' },
+        { id: 'epics-labels-header', col: 'labels' }
     ];
     columns.forEach(({ id, col }) => {
         const th = document.getElementById(id);
