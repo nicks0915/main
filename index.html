@@ -450,13 +450,13 @@
         <!-- Assessments Metrics and Cost Metrics -->
         <div class="metrics" id="assessments-metrics">
             <div class="metric total" id="assessments-cost-left" style="min-width:220px;">
-                <h3>Cost</h3>
+                <h3>Cost Breakdown</h3>
                 <div id="assessments-cost-counts" style="margin-top:8px;">
                     <div style="color:#999;font-size:0.9rem;">No data loaded</div>
                 </div>
             </div>
             <div class="metric" id="assessments-cost-metrics" style="min-width:400px;">
-                <h3 style="margin-bottom: 15px;">Cost Metrics</h3>
+                <h3 style="margin-bottom: 15px;">Quick Filters</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <!-- Row 1: Missing Cost Estimate & High Cost Items -->
                     <div class="health-metric-card" id="assessments-missing-cost-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #dc3545; cursor: pointer; transition: all 0.2s;">
@@ -469,11 +469,11 @@
                     </div>
                     <!-- Row 2: Completed Items & Non-Completed Items -->
                     <div class="health-metric-card" id="assessments-completed-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745; cursor: pointer; transition: all 0.2s;">
-                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Completed Items</div>
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Closed Items</div>
                         <div class="metric-value" id="assessments-completed-count" style="color:#28a745; font-size: 1.8rem;">0</div>
                     </div>
                     <div class="health-metric-card" id="assessments-non-completed-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8; cursor: pointer; transition: all 0.2s;">
-                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Non-Completed Items</div>
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Open Items</div>
                         <div class="metric-value" id="assessments-non-completed-count" style="color:#17a2b8; font-size: 1.8rem;">0</div>
                     </div>
                 </div>
@@ -651,7 +651,7 @@
                 </div>
             </div>
             <div class="metric" id="epics-health-metrics" style="min-width:400px;">
-                <h3 style="margin-bottom: 15px;">Health Metrics</h3>
+                <h3 style="margin-bottom: 15px;">Quick Filters</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <!-- Row 1: Non-Green Items & Past Due Date -->
                     <div class="health-metric-card" id="epics-non-green-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #dc3545; cursor: pointer; transition: all 0.2s;">
@@ -673,7 +673,7 @@
                     </div>
                     <!-- Row 3: Non-Completed Items & Future Dated Items -->
                     <div class="health-metric-card" id="epics-non-completed-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8; cursor: pointer; transition: all 0.2s;">
-                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Non-Completed Items</div>
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">Open Items</div>
                         <div class="metric-value" id="epics-non-completed-count" style="color:#17a2b8; font-size: 1.8rem;">0</div>
                     </div>
                     <div class="health-metric-card" id="epics-future-dated-card" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745; cursor: pointer; transition: all 0.2s;">
@@ -887,26 +887,43 @@
             </div>
         </div>
 
-        <div class="metrics">
-            <div class="metric critical">
-                <h3>Critical</h3>
-                <div class="metric-value" id="critical-count">0</div>
-                <div class="metric-subtitle" id="critical-subtitle">All Criticals</div>
+        <div class="metrics" id="defects-metrics">
+            <!-- LEFT: Defect Breakdown (informational) -->
+            <div class="metric total" id="defects-breakdown-panel" style="min-width:220px;">
+                <h3>Defect Breakdown</h3>
+                <div id="defects-breakdown-counts" style="margin-top:8px;">
+                    <div style="color:#999;font-size:0.9rem;">No data loaded</div>
+                </div>
             </div>
-            <div class="metric high">
-                <h3>High</h3>
-                <div class="metric-value" id="high-count">0</div>
-                <div class="metric-subtitle" id="high-subtitle">All High</div>
-            </div>
-            <div class="metric past-due">
-                <h3>Past Due</h3>
-                <div class="metric-value" id="past-due-count">0</div>
-                <div class="metric-subtitle" id="past-due-subtitle">All Past Due</div>
-            </div>
-            <div class="metric total">
-                <h3>Total Items</h3>
-                <div class="metric-value" id="total-count">0</div>
-                <div class="metric-subtitle" id="total-subtitle">All Records</div>
+            <!-- RIGHT: Quick Filters (6 clickable cards, 2 col × 3 row) -->
+            <div class="metric" id="defects-quick-filters-panel" style="min-width:400px;">
+                <h3 style="margin-bottom:15px;">Quick Filters</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="health-metric-card" id="defects-age-card" style="padding:12px;background:#f8f9fa;border-radius:8px;border-left:4px solid #6f42c1;cursor:pointer;transition:all 0.2s;position:relative;">
+                        <div style="font-size:0.85rem;color:#666;margin-bottom:4px;">Age &gt; 10 Days</div>
+                        <div class="metric-value" id="defects-age-count" style="color:#6f42c1;font-size:1.8rem;">0</div>
+                    </div>
+                    <div class="health-metric-card" id="defects-overdue-card" style="padding:12px;background:#f8f9fa;border-radius:8px;border-left:4px solid #dc3545;cursor:pointer;transition:all 0.2s;position:relative;">
+                        <div style="font-size:0.85rem;color:#666;margin-bottom:4px;">Overdue</div>
+                        <div class="metric-value" id="defects-overdue-count" style="color:#dc3545;font-size:1.8rem;">0</div>
+                    </div>
+                    <div class="health-metric-card" id="defects-unassigned-card" style="padding:12px;background:#f8f9fa;border-radius:8px;border-left:4px solid #fd7e14;cursor:pointer;transition:all 0.2s;position:relative;">
+                        <div style="font-size:0.85rem;color:#666;margin-bottom:4px;">Unassigned Defects</div>
+                        <div class="metric-value" id="defects-unassigned-count" style="color:#fd7e14;font-size:1.8rem;">0</div>
+                    </div>
+                    <div class="health-metric-card" id="defects-no-due-date-card" style="padding:12px;background:#f8f9fa;border-radius:8px;border-left:4px solid #007bff;cursor:pointer;transition:all 0.2s;position:relative;">
+                        <div style="font-size:0.85rem;color:#666;margin-bottom:4px;">No Due Date</div>
+                        <div class="metric-value" id="defects-no-due-date-count" style="color:#007bff;font-size:1.8rem;">0</div>
+                    </div>
+                    <div class="health-metric-card" id="defects-open-card" style="padding:12px;background:#f8f9fa;border-radius:8px;border-left:4px solid #17a2b8;cursor:pointer;transition:all 0.2s;position:relative;">
+                        <div style="font-size:0.85rem;color:#666;margin-bottom:4px;">Open Defects</div>
+                        <div class="metric-value" id="defects-open-count" style="color:#17a2b8;font-size:1.8rem;">0</div>
+                    </div>
+                    <div class="health-metric-card" id="defects-due-soon-card" style="padding:12px;background:#f8f9fa;border-radius:8px;border-left:4px solid #28a745;cursor:pointer;transition:all 0.2s;position:relative;">
+                        <div style="font-size:0.85rem;color:#666;margin-bottom:4px;">Due Soon</div>
+                        <div class="metric-value" id="defects-due-soon-count" style="color:#28a745;font-size:1.8rem;">0</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3603,14 +3620,9 @@ SODP-10800,VoG CEUAT Prod Order confirmation email missing installation details,
             gtmLaunchGating: false
         };
 
-        // Defect metric card filter state
-        // critical, high, pastDue can be combined; total is exclusive
-        let defectMetricFilters = {
-            critical: false,
-            high: false,
-            pastDue: false,
-            total: false
-        };
+        // Defect quick filter state (single-select)
+        let defectQuickFilter = null;
+        // values: 'ageOver10' | 'unassigned' | 'openDefects' | 'overdue' | 'noDueDate' | 'dueSoon' | null
 
         const weekRanges = {
             'week1': { start: '2025-08-04', end: '2025-08-08', label: 'Week Aug 4th' },
@@ -3971,72 +3983,98 @@ function populateWeekDropdown() {
                 }
             });
 
-            // Defect metric card click handlers
-            setupDefectMetricCardListeners();
+            // Defect quick filter card click handlers
+            setDefectQuickFilterListeners();
         }
 
-        function setupDefectMetricCardListeners() {
-            const metricCards = [
-                { selector: '.metric.critical', key: 'critical' },
-                { selector: '.metric.high',     key: 'high' },
-                { selector: '.metric.past-due', key: 'pastDue' },
-                { selector: '.metric.total',    key: 'total' }
+        function setDefectQuickFilterListeners() {
+            const quickFilters = [
+                { id: 'defects-age-card',         filter: 'ageOver10'   },
+                { id: 'defects-unassigned-card',  filter: 'unassigned'  },
+                { id: 'defects-open-card',        filter: 'openDefects' },
+                { id: 'defects-overdue-card',     filter: 'overdue'     },
+                { id: 'defects-no-due-date-card', filter: 'noDueDate'   },
+                { id: 'defects-due-soon-card',    filter: 'dueSoon'     }
             ];
-
-            metricCards.forEach(({ selector, key }) => {
-                const card = document.querySelector('#defects-content ' + selector);
-                if (!card) return;
-
-                card.addEventListener('click', function() {
-                    if (key === 'total') {
-                        // Total is exclusive: toggle it on/off, clear all others
-                        const wasActive = defectMetricFilters.total;
-                        // Reset all
-                        defectMetricFilters = { critical: false, high: false, pastDue: false, total: false };
-                        if (!wasActive) {
-                            defectMetricFilters.total = true;
-                        }
+            quickFilters.forEach(function({ id, filter }) {
+                const elem = document.getElementById(id);
+                if (!elem) return;
+                elem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (defectQuickFilter === filter) {
+                        defectQuickFilter = null;
+                        clearDefectQuickFilterHighlight();
                     } else {
-                        // Critical / High / PastDue: multi-select, but deselect Total
-                        defectMetricFilters.total = false;
-                        defectMetricFilters[key] = !defectMetricFilters[key];
+                        defectQuickFilter = filter;
+                        highlightDefectQuickFilter(id);
                     }
-                    updateDefectMetricCardUI();
                     applyFilters();
                 });
             });
         }
 
-        function updateDefectMetricCardUI() {
-            const cardMap = [
-                { selector: '.metric.critical', key: 'critical' },
-                { selector: '.metric.high',     key: 'high' },
-                { selector: '.metric.past-due', key: 'pastDue' },
-                { selector: '.metric.total',    key: 'total' }
-            ];
+        function highlightDefectQuickFilter(activeId) {
+            clearDefectQuickFilterHighlight();
+            const elem = document.getElementById(activeId);
+            if (!elem) return;
+            elem.classList.add('active');
+            if (!elem.querySelector('.metric-selected-checkbox')) {
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = true;
+                cb.className = 'metric-selected-checkbox';
+                elem.appendChild(cb);
+            }
+        }
 
-            cardMap.forEach(({ selector, key }) => {
-                const card = document.querySelector('#defects-content ' + selector);
-                if (!card) return;
-
-                const isActive = defectMetricFilters[key];
-
-                if (isActive) {
-                    card.classList.add('metric-active');
-                    // Add checkbox if not already present
-                    if (!card.querySelector('.defect-metric-checkbox')) {
-                        const cb = document.createElement('input');
-                        cb.type = 'checkbox';
-                        cb.checked = true;
-                        cb.className = 'defect-metric-checkbox';
-                        card.appendChild(cb);
-                    }
-                } else {
-                    card.classList.remove('metric-active');
-                    const existingCb = card.querySelector('.defect-metric-checkbox');
-                    if (existingCb) existingCb.remove();
-                }
+        function clearDefectQuickFilterHighlight() {
+            ['defects-age-card','defects-unassigned-card','defects-open-card',
+             'defects-overdue-card','defects-no-due-date-card','defects-due-soon-card'].forEach(function(id) {
+                const elem = document.getElementById(id);
+                if (!elem) return;
+                elem.classList.remove('active');
+                const cb = elem.querySelector('.metric-selected-checkbox');
+                if (cb) cb.remove();
             });
+        }
+
+        function updateDefectBreakdown(data) {
+            const container = document.getElementById('defects-breakdown-counts');
+            if (!container) return;
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="color:#999;font-size:0.9rem;">No data loaded</div>';
+                return;
+            }
+            const total = data.length;
+            const critCount  = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'critical').length;
+            const highCount  = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'high').length;
+            const medCount   = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'medium').length;
+            const lowCount   = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'low').length;
+            const closedCount    = data.filter(d => ['closed','done','resolved'].includes((d.statusNormalized || '').toLowerCase())).length;
+            const cancelledCount = data.filter(d => ['cancelled','canceled'].includes((d.statusNormalized || '').toLowerCase())).length;
+            const openTotal  = critCount + highCount + medCount + lowCount;
+
+            function pct(n) { return total > 0 ? Math.round(n / total * 100) : 0; }
+            function row(label, count, color) {
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;">'
+                    + '<span style="font-size:0.85rem;color:#555;">' + label + '</span>'
+                    + '<span style="display:flex;gap:10px;align-items:center;">'
+                    + '<span style="font-size:1.0rem;font-weight:600;color:' + color + ';">' + count + '</span>'
+                    + '<span style="font-size:0.78rem;color:#999;min-width:34px;text-align:right;">' + pct(count) + '%</span>'
+                    + '</span></div>';
+            }
+
+            container.innerHTML =
+                row('Critical', critCount, '#dc3545') +
+                row('High',     highCount, '#fd7e14') +
+                row('Medium',   medCount,  '#ffc107') +
+                row('Low',      lowCount,  '#28a745') +
+                '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:2px solid #dee2e6;margin-top:2px;">'
+                    + '<span style="font-size:0.85rem;font-weight:700;color:#333;">Total</span>'
+                    + '<span style="font-size:1.0rem;font-weight:700;color:#333;">' + openTotal + '</span>'
+                + '</div>' +
+                row('Closed',    closedCount,    '#6c757d') +
+                row('Cancelled', cancelledCount, '#6c757d');
         }
 
         function toggleDropdown(type) {
@@ -4181,30 +4219,28 @@ function applyFilters() {
             }
         }
 
-        // Defect metric card filters
-        const anyMetricActive = defectMetricFilters.critical || defectMetricFilters.high || defectMetricFilters.pastDue || defectMetricFilters.total;
-        if (anyMetricActive) {
-            if (defectMetricFilters.total) {
-                // Total selected: show all records (no additional filter needed)
-                // do nothing — all records pass
-            } else {
-                // Build priority/pastDue filter
-                const isCritical = defectMetricFilters.critical && record.severityNormalized === 'Critical';
-                const isHigh = defectMetricFilters.high && record.severityNormalized === 'High';
-                const isPastDue = defectMetricFilters.pastDue && record.dueDateStatus === 'past-due';
-
-                if (defectMetricFilters.pastDue && (defectMetricFilters.critical || defectMetricFilters.high)) {
-                    // Past Due combined with Critical/High: must be past-due AND (critical or high)
-                    if (!isPastDue) return false;
-                    if (!isCritical && !isHigh) return false;
-                } else if (defectMetricFilters.pastDue) {
-                    // Only Past Due selected
-                    if (!isPastDue) return false;
-                } else {
-                    // Only Critical and/or High selected
-                    if (!isCritical && !isHigh) return false;
-                }
-            }
+        // Defect quick filter
+        if (defectQuickFilter === 'ageOver10') {
+            if (parseInt(record['Defect Age'] || 0) <= 10) return false;
+        }
+        if (defectQuickFilter === 'unassigned') {
+            const a = (record['Assignee'] || '').trim();
+            if (a && a !== 'Unassigned') return false;
+        }
+        if (defectQuickFilter === 'openDefects') {
+            const st = (record.statusNormalized || '').toLowerCase();
+            if (['closed','done','resolved','cancelled','canceled'].includes(st)) return false;
+        }
+        if (defectQuickFilter === 'overdue') {
+            if (record.dueDateStatus !== 'past-due') return false;
+        }
+        if (defectQuickFilter === 'noDueDate') {
+            if (record.dueDateStatus !== 'no-due-date') return false;
+        }
+        if (defectQuickFilter === 'dueSoon') {
+            if (record.dueDateStatus !== 'has-due-date' || !record.dueDateParsed) return false;
+            const daysAway = (record.dueDateParsed - new Date()) / 86400000;
+            if (daysAway > 14) return false;
         }
 
         // Launch Gating filters (Beta OR GTM logic)
@@ -4294,9 +4330,9 @@ function clearSearch() {
                 gtmLaunchGating: false
             };
 
-            // Reset defect metric card filters
-            defectMetricFilters = { critical: false, high: false, pastDue: false, total: false };
-            updateDefectMetricCardUI();
+            // Reset defect quick filter
+            defectQuickFilter = null;
+            clearDefectQuickFilterHighlight();
 
             // Clear search
             searchTerm = '';
@@ -4326,10 +4362,7 @@ function clearSearch() {
                    filters.weeks.length > 0 ||
                    filters.statuses.length > 0 ||
                    filters.betaLaunchGating ||
-                   defectMetricFilters.critical ||
-                   defectMetricFilters.high ||
-                   defectMetricFilters.pastDue ||
-                   defectMetricFilters.total;
+                   defectQuickFilter !== null;
         }
 
         function updateDashboard() {
@@ -4338,34 +4371,30 @@ function clearSearch() {
         }
 
         function updateMetrics() {
-            // Calculate filtered counts
-            const filteredStats = {
-                critical: filteredData.filter(d => d.severityNormalized === 'Critical').length,
-                high: filteredData.filter(d => d.severityNormalized === 'High').length,
-                pastDue: filteredData.filter(d => d.dueDateStatus === 'past-due').length,
-                total: filteredData.length
-            };
+            const data = filteredData;
+            const total = allData.length;
 
-            // Calculate total counts from all data
-            const totalStats = {
-                critical: allData.filter(d => d.severityNormalized === 'Critical').length,
-                high: allData.filter(d => d.severityNormalized === 'High').length,
-                pastDue: allData.filter(d => d.dueDateStatus === 'past-due').length,
-                total: allData.length
-            };
+            // Update quick filter card counts (from filtered data)
+            function setCount(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+            setCount('defects-age-count',
+                data.filter(d => parseInt(d['Defect Age'] || 0) > 10).length);
+            setCount('defects-unassigned-count',
+                data.filter(d => { const a = (d['Assignee'] || '').trim(); return !a || a === 'Unassigned'; }).length);
+            setCount('defects-open-count',
+                data.filter(d => !['closed','done','resolved','cancelled','canceled'].includes((d.statusNormalized || '').toLowerCase())).length);
+            setCount('defects-overdue-count',
+                data.filter(d => d.dueDateStatus === 'past-due').length);
+            setCount('defects-no-due-date-count',
+                data.filter(d => d.dueDateStatus === 'no-due-date').length);
+            setCount('defects-due-soon-count',
+                data.filter(d => d.dueDateStatus === 'has-due-date' && d.dueDateParsed && (d.dueDateParsed - new Date()) / 86400000 <= 14).length);
 
-            // Check if any filters are active
-            const hasActiveFilters = isFiltersActive();
-
-            // Update metric displays with contextual information
-            updateMetricDisplay('critical-count', 'critical-subtitle', filteredStats.critical, totalStats.critical, hasActiveFilters);
-            updateMetricDisplay('high-count', 'high-subtitle', filteredStats.high, totalStats.high, hasActiveFilters);
-            updateMetricDisplay('past-due-count', 'past-due-subtitle', filteredStats.pastDue, totalStats.pastDue, hasActiveFilters);
-            updateMetricDisplay('total-count', 'total-subtitle', filteredStats.total, totalStats.total, hasActiveFilters);
+            // Update breakdown panel
+            updateDefectBreakdown(data);
 
             // Update table record counts
-            document.getElementById('visible-count').textContent = filteredStats.total;
-            document.getElementById('total-records').textContent = totalStats.total;
+            document.getElementById('visible-count').textContent = data.length;
+            document.getElementById('total-records').textContent = total;
         }
 
         function updateMetricDisplay(countElementId, subtitleElementId, filteredCount, totalCount, hasActiveFilters) {
