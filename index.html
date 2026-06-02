@@ -644,7 +644,7 @@
         <!-- Merged Work Items Count + Health Metrics -->
         <div class="metrics" id="epics-metrics">
             <div class="metric total" id="epics-workitems-metric" style="min-width:220px;">
-                <h3>Work Item Metrics</h3>
+                <h3>Work Item Breakdown</h3>
                 <div id="epics-issue-type-counts" style="margin-top:8px;">
                     <!-- Dynamically populated by updateEpicsMetrics() -->
                     <div style="color:#999;font-size:0.9rem;">No data loaded</div>
@@ -941,7 +941,7 @@
             <div class="search-section">
                 <div class="search-container">
                     <div class="search-input-group">
-                        <input type="text" id="key-search" placeholder="Search by Key or Assignee (e.g., 11002, SODP-11002, or John Doe)" />
+                        <input type="text" id="key-search" placeholder="Search any field — key, summary, assignee, severity, status, application..." />
                         <button class="btn btn-secondary" id="clear-search">✕</button>
                     </div>
                     <div class="search-results">
@@ -3179,8 +3179,8 @@ function updateEpicsMetrics() {
                         row.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;padding:5px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.15s;border-radius:4px;' + (isActive ? 'background:#e8f4fd;' : '');
                         row.innerHTML = '<span class="type-row-check" style="font-size:0.8rem;color:#007bff;">' + (isActive ? '&#10003;' : '') + '</span>'
                             + '<span style="font-size:0.9rem;color:#333;font-weight:500;">' + displayName + '</span>'
-                            + '<span style="font-size:0.9rem;color:#555;text-align:right;min-width:52px;padding-left:12px;">' + t.count + '</span>'
-                            + '<span style="font-size:0.9rem;color:#28a745;font-weight:600;text-align:right;min-width:90px;padding-left:12px;">' + formatCostValue(t.cost) + '</span>';
+                            + '<span style="font-size:1.3rem;font-weight:bold;color:#555;text-align:right;min-width:52px;padding-left:12px;">' + t.count + '</span>'
+                            + '<span style="font-size:1.0rem;color:#28a745;font-weight:600;text-align:right;min-width:90px;padding-left:12px;">' + formatCostValue(t.cost) + '</span>';
                         row.addEventListener('click', function() {
                             if (assessmentsTypeFilter === filterType) {
                                 assessmentsTypeFilter = null;
@@ -3206,8 +3206,8 @@ function updateEpicsMetrics() {
                     subtotalRow.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;padding:6px 8px;border-top:2px solid #dee2e6;border-bottom:2px solid #dee2e6;background:#f0f4ff;border-radius:4px;margin-top:2px;';
                     subtotalRow.innerHTML = '<span></span>'
                         + '<span style="font-size:0.9rem;color:#333;font-weight:700;">Total</span>'
-                        + '<span style="font-size:0.9rem;color:#333;font-weight:700;text-align:right;min-width:52px;padding-left:12px;">' + esCount + '</span>'
-                        + '<span style="font-size:0.9rem;color:#28a745;font-weight:700;text-align:right;min-width:90px;padding-left:12px;">' + formatCostValue(esCost) + '</span>';
+                        + '<span style="font-size:1.3rem;font-weight:bold;color:#333;text-align:right;min-width:52px;padding-left:12px;">' + esCount + '</span>'
+                        + '<span style="font-size:1.0rem;color:#28a745;font-weight:700;text-align:right;min-width:90px;padding-left:12px;">' + formatCostValue(esCost) + '</span>';
                     costContainer.appendChild(subtotalRow);
                 }
             }
@@ -3623,6 +3623,10 @@ SODP-10800,VoG CEUAT Prod Order confirmation email missing installation details,
         // Defect quick filter state (single-select)
         let defectQuickFilter = null;
         // values: 'ageOver10' | 'unassigned' | 'openDefects' | 'overdue' | 'noDueDate' | 'dueSoon' | null
+
+        // Defect breakdown row filter (single-select)
+        let defectBreakdownFilter = null;
+        // values: 'critical' | 'high' | 'medium' | 'low' | 'closed' | 'cancelled' | null
 
         const weekRanges = {
             'week1': { start: '2025-08-04', end: '2025-08-08', label: 'Week Aug 4th' },
@@ -4046,35 +4050,85 @@ function populateWeekDropdown() {
                 return;
             }
             const total = data.length;
-            const critCount  = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'critical').length;
-            const highCount  = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'high').length;
-            const medCount   = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'medium').length;
-            const lowCount   = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'low').length;
+            const critCount      = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'critical').length;
+            const highCount      = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'high').length;
+            const medCount       = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'medium').length;
+            const lowCount       = data.filter(d => (d.severityNormalized || '').toLowerCase() === 'low').length;
             const closedCount    = data.filter(d => ['closed','done','resolved'].includes((d.statusNormalized || '').toLowerCase())).length;
             const cancelledCount = data.filter(d => ['cancelled','canceled'].includes((d.statusNormalized || '').toLowerCase())).length;
-            const openTotal  = critCount + highCount + medCount + lowCount;
-
+            const openTotal      = critCount + highCount + medCount + lowCount;
             function pct(n) { return total > 0 ? Math.round(n / total * 100) : 0; }
-            function row(label, count, color) {
-                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;">'
-                    + '<span style="font-size:0.85rem;color:#555;">' + label + '</span>'
-                    + '<span style="display:flex;gap:10px;align-items:center;">'
-                    + '<span style="font-size:1.0rem;font-weight:600;color:' + color + ';">' + count + '</span>'
-                    + '<span style="font-size:0.78rem;color:#999;min-width:34px;text-align:right;">' + pct(count) + '%</span>'
-                    + '</span></div>';
+
+            container.innerHTML = '';
+
+            // Header row
+            const hdr = document.createElement('div');
+            hdr.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;padding:3px 8px 6px 8px;border-bottom:2px solid #dee2e6;';
+            hdr.innerHTML = '<span></span>'
+                + '<span style="font-size:0.75rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Severity / Status</span>'
+                + '<span style="font-size:0.75rem;color:#888;font-weight:600;text-align:right;min-width:48px;padding-left:12px;">Count</span>'
+                + '<span style="font-size:0.75rem;color:#888;font-weight:600;text-align:right;min-width:44px;padding-left:8px;">%</span>';
+            container.appendChild(hdr);
+
+            function makeRow(label, count, color, filterKey) {
+                const isActive = defectBreakdownFilter === filterKey;
+                const row = document.createElement('div');
+                row.className = 'defect-breakdown-row' + (isActive ? ' active' : '');
+                row.dataset.filter = filterKey;
+                row.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;'
+                    + 'padding:6px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.15s;border-radius:4px;'
+                    + (isActive ? 'background:#e8f4fd;border-left:3px solid #667eea;' : '');
+
+                const cbCell = document.createElement('span');
+                if (isActive) {
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox'; cb.checked = true;
+                    cb.className = 'defect-breakdown-checkbox';
+                    cbCell.appendChild(cb);
+                }
+                row.appendChild(cbCell);
+
+                const lbl = document.createElement('span');
+                lbl.style.cssText = 'font-size:0.9rem;color:#555;';
+                lbl.textContent = label;
+                row.appendChild(lbl);
+
+                const cnt = document.createElement('span');
+                cnt.style.cssText = 'font-size:1.3rem;font-weight:bold;color:' + color + ';text-align:right;min-width:48px;padding-left:12px;';
+                cnt.textContent = count;
+                row.appendChild(cnt);
+
+                const pctEl = document.createElement('span');
+                pctEl.style.cssText = 'font-size:1.1rem;font-weight:600;color:#888;text-align:right;min-width:44px;padding-left:8px;';
+                pctEl.textContent = pct(count) + '%';
+                row.appendChild(pctEl);
+
+                row.addEventListener('click', function() {
+                    defectBreakdownFilter = (defectBreakdownFilter === filterKey) ? null : filterKey;
+                    applyFilters();
+                });
+                row.addEventListener('mouseenter', function() { if (defectBreakdownFilter !== filterKey) row.style.background = '#f8f9fa'; });
+                row.addEventListener('mouseleave', function() { if (defectBreakdownFilter !== filterKey) row.style.background = ''; });
+                return row;
             }
 
-            container.innerHTML =
-                row('Critical', critCount, '#dc3545') +
-                row('High',     highCount, '#fd7e14') +
-                row('Medium',   medCount,  '#ffc107') +
-                row('Low',      lowCount,  '#28a745') +
-                '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:2px solid #dee2e6;margin-top:2px;">'
-                    + '<span style="font-size:0.85rem;font-weight:700;color:#333;">Total</span>'
-                    + '<span style="font-size:1.0rem;font-weight:700;color:#333;">' + openTotal + '</span>'
-                + '</div>' +
-                row('Closed',    closedCount,    '#6c757d') +
-                row('Cancelled', cancelledCount, '#6c757d');
+            container.appendChild(makeRow('Critical',  critCount,      '#dc3545', 'critical'));
+            container.appendChild(makeRow('High',      highCount,      '#fd7e14', 'high'));
+            container.appendChild(makeRow('Medium',    medCount,       '#ffc107', 'medium'));
+            container.appendChild(makeRow('Low',       lowCount,       '#28a745', 'low'));
+
+            // Total row (non-clickable, between severity and status rows)
+            const totalRow = document.createElement('div');
+            totalRow.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;'
+                + 'padding:6px 8px;border-top:2px solid #dee2e6;border-bottom:2px solid #dee2e6;background:#f0f4ff;border-radius:4px;margin-top:2px;margin-bottom:2px;';
+            totalRow.innerHTML = '<span></span>'
+                + '<span style="font-size:0.9rem;color:#333;font-weight:700;">Total</span>'
+                + '<span style="font-size:1.3rem;font-weight:bold;color:#333;text-align:right;min-width:48px;padding-left:12px;">' + openTotal + '</span>'
+                + '<span style="font-size:1.1rem;font-weight:600;color:#888;text-align:right;min-width:44px;padding-left:8px;">' + pct(openTotal) + '%</span>';
+            container.appendChild(totalRow);
+
+            container.appendChild(makeRow('Closed',    closedCount,    '#6c757d', 'closed'));
+            container.appendChild(makeRow('Cancelled', cancelledCount, '#6c757d', 'cancelled'));
         }
 
         function toggleDropdown(type) {
@@ -4147,6 +4201,8 @@ function matchesSearch(record, term) {
         record.applicationNormalized || '',
         record.Assignee || '',
         record.statusNormalized || '',
+        record['Environment'] || record.environmentNormalized || '',
+        record['Labels'] || '',
         String(record['Defect Age'] || '0')
     ];
     return searchableFields.some(field => field.toLowerCase().includes(termLower));
@@ -4217,6 +4273,18 @@ function applyFilters() {
             if (!filters.environments.includes(recEnv)) {
                 return false;
             }
+        }
+
+        // Defect breakdown row filter (AND with quick filter)
+        if (defectBreakdownFilter) {
+            const sev = (record.severityNormalized || '').toLowerCase();
+            const st  = (record.statusNormalized  || '').toLowerCase();
+            if (defectBreakdownFilter === 'critical'  && sev !== 'critical') return false;
+            if (defectBreakdownFilter === 'high'      && sev !== 'high')     return false;
+            if (defectBreakdownFilter === 'medium'    && sev !== 'medium')   return false;
+            if (defectBreakdownFilter === 'low'       && sev !== 'low')      return false;
+            if (defectBreakdownFilter === 'closed'    && !['closed','done','resolved'].includes(st)) return false;
+            if (defectBreakdownFilter === 'cancelled' && !['cancelled','canceled'].includes(st))    return false;
         }
 
         // Defect quick filter
@@ -4330,9 +4398,10 @@ function clearSearch() {
                 gtmLaunchGating: false
             };
 
-            // Reset defect quick filter
+            // Reset defect filters
             defectQuickFilter = null;
             clearDefectQuickFilterHighlight();
+            defectBreakdownFilter = null;
 
             // Clear search
             searchTerm = '';
@@ -4362,7 +4431,8 @@ function clearSearch() {
                    filters.weeks.length > 0 ||
                    filters.statuses.length > 0 ||
                    filters.betaLaunchGating ||
-                   defectQuickFilter !== null;
+                   defectQuickFilter !== null ||
+                   defectBreakdownFilter !== null;
         }
 
         function updateDashboard() {
