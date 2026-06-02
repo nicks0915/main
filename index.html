@@ -1128,17 +1128,21 @@
 
     <script>
         // Shared hover tooltip for truncated Summary cells
-        (function() {
+        window.showSummaryTooltip = function(text) {
             var tip = document.getElementById('summary-tooltip');
-            document.addEventListener('mousemove', function(e) {
-                if (!tip || tip.style.display === 'none') return;
-                var x = e.clientX + 14, y = e.clientY + 14;
-                tip.style.left = (x + tip.offsetWidth > window.innerWidth ? e.clientX - tip.offsetWidth - 8 : x) + 'px';
-                tip.style.top  = (y + tip.offsetHeight > window.innerHeight ? e.clientY - tip.offsetHeight - 8 : y) + 'px';
-            });
-            window.showSummaryTooltip = function(text) { if (tip) { tip.textContent = text; tip.style.display = 'block'; } };
-            window.hideSummaryTooltip = function()     { if (tip) tip.style.display = 'none'; };
-        })();
+            if (tip) { tip.textContent = text; tip.style.display = 'block'; }
+        };
+        window.hideSummaryTooltip = function() {
+            var tip = document.getElementById('summary-tooltip');
+            if (tip) tip.style.display = 'none';
+        };
+        document.addEventListener('mousemove', function(e) {
+            var tip = document.getElementById('summary-tooltip');
+            if (!tip || tip.style.display === 'none') return;
+            var x = e.clientX + 14, y = e.clientY + 14;
+            tip.style.left = (x + tip.offsetWidth > window.innerWidth ? e.clientX - tip.offsetWidth - 8 : x) + 'px';
+            tip.style.top  = (y + tip.offsetHeight > window.innerHeight ? e.clientY - tip.offsetHeight - 8 : y) + 'px';
+        });
 
         // ===== EPICS TAB FUNCTIONALITY =====
 
@@ -2783,7 +2787,8 @@ function updateEpicsMetrics() {
                 { id: 'assessments-gate2-cost-header', col: 'gate2Cost' },
                 { id: 'assessments-status-header', col: 'status' },
                 { id: 'assessments-due-date-header', col: 'dueDate' },
-                { id: 'assessments-assignee-header', col: 'assignee' }
+                { id: 'assessments-assignee-header', col: 'assignee' },
+                { id: 'assessments-labels-header', col: 'labels' }
             ];
             assessmentsSortColumns.forEach(({ id, col }) => {
                 const th = document.getElementById(id);
@@ -3158,6 +3163,7 @@ function updateEpicsMetrics() {
                     case 'status': valueA = a.statusNormalized || ''; valueB = b.statusNormalized || ''; break;
                     case 'dueDate': valueA = a['Due Date'] ? new Date(a['Due Date']) : new Date(0); valueB = b['Due Date'] ? new Date(b['Due Date']) : new Date(0); break;
                     case 'assignee': valueA = a['Assignee'] || ''; valueB = b['Assignee'] || ''; break;
+                    case 'labels': valueA = a['Labels'] || ''; valueB = b['Labels'] || ''; break;
                     default: valueA = ''; valueB = '';
                 }
                 if (assessmentsSortConfig.column === 'key' || assessmentsSortConfig.column === 'dueDate') {
