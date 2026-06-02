@@ -336,9 +336,11 @@ function fetchExecutiveStatusFromSlack() {
 function resolveSlackUserMentions(text, botToken) {
   if (!text) return text;
 
-  // Collect unique bare user IDs — <@UID> without a |name suffix
+  // Collect unique user IDs from bare <@UID> or empty-name <@UID|> mentions.
+  // Slack sometimes omits the display name entirely (sending <@UID|>) when the
+  // user's profile display name is blank — the old (?!\|) lookahead missed those.
   var seen = {};
-  var re = /<@([A-Z0-9]+)(?!\|)>/g;
+  var re = /<@([A-Z0-9]+)(>|\|>)/g;
   var match;
   while ((match = re.exec(text)) !== null) {
     seen[match[1]] = true;
@@ -355,12 +357,15 @@ function resolveSlackUserMentions(text, botToken) {
       );
       var data = JSON.parse(resp.getContentText());
       if (data.ok && data.user) {
-        var name = data.user.profile.display_name
-                || data.user.profile.real_name
+        var profile = data.user.profile || {};
+        var name = profile.display_name
+                || profile.real_name_normalized
+                || profile.real_name
                 || data.user.name
                 || uid;
-        // Replace all bare <@UID> with <@UID|name> so formatSlackText picks up the name
+        // Replace both <@UID> and <@UID|> with <@UID|name>
         text = text.split('<@' + uid + '>').join('<@' + uid + '|' + name + '>');
+        text = text.split('<@' + uid + '|>').join('<@' + uid + '|' + name + '>');
       }
     } catch (e) {
       // leave as-is; formatSlackText will render @UID as fallback
