@@ -4076,7 +4076,7 @@ function populateWeekDropdown() {
                 row.className = 'defect-breakdown-row' + (isActive ? ' active' : '');
                 row.dataset.filter = filterKey;
                 row.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;'
-                    + 'padding:6px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.15s;border-radius:4px;'
+                    + 'padding:6px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer;border-radius:4px;transition:all 0.2s;'
                     + (isActive ? 'background:#e8f4fd;border-left:3px solid #667eea;' : '');
 
                 const cbCell = document.createElement('span');
@@ -4107,28 +4107,42 @@ function populateWeekDropdown() {
                     defectBreakdownFilter = (defectBreakdownFilter === filterKey) ? null : filterKey;
                     applyFilters();
                 });
-                row.addEventListener('mouseenter', function() { if (defectBreakdownFilter !== filterKey) row.style.background = '#f8f9fa'; });
-                row.addEventListener('mouseleave', function() { if (defectBreakdownFilter !== filterKey) row.style.background = ''; });
+                row.addEventListener('mouseenter', function() {
+                    if (!row.classList.contains('active')) row.style.background = '#f8f9fa';
+                });
+                row.addEventListener('mouseleave', function() {
+                    if (!row.classList.contains('active')) row.style.background = '';
+                });
                 return row;
             }
 
-            container.appendChild(makeRow('Critical',  critCount,      '#dc3545', 'critical'));
-            container.appendChild(makeRow('High',      highCount,      '#fd7e14', 'high'));
-            container.appendChild(makeRow('Medium',    medCount,       '#ffc107', 'medium'));
-            container.appendChild(makeRow('Low',       lowCount,       '#28a745', 'low'));
+            // Severity rows — only render those with count > 0 (matching Work Item Breakdown behaviour)
+            const sevRows = [
+                { label: 'Critical', count: critCount,   color: '#dc3545', filter: 'critical' },
+                { label: 'High',     count: highCount,   color: '#fd7e14', filter: 'high'     },
+                { label: 'Medium',   count: medCount,    color: '#ffc107', filter: 'medium'   },
+                { label: 'Low',      count: lowCount,    color: '#28a745', filter: 'low'      },
+            ];
+            sevRows.filter(r => r.count > 0).forEach(r => container.appendChild(makeRow(r.label, r.count, r.color, r.filter)));
 
-            // Total row (non-clickable, between severity and status rows)
-            const totalRow = document.createElement('div');
-            totalRow.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;'
-                + 'padding:6px 8px;border-top:2px solid #dee2e6;border-bottom:2px solid #dee2e6;background:#f0f4ff;border-radius:4px;margin-top:2px;margin-bottom:2px;';
-            totalRow.innerHTML = '<span></span>'
-                + '<span style="font-size:0.9rem;color:#333;font-weight:700;">Total</span>'
-                + '<span style="font-size:1.3rem;font-weight:bold;color:#333;text-align:right;min-width:48px;padding-left:12px;">' + openTotal + '</span>'
-                + '<span style="font-size:1.1rem;font-weight:600;color:#888;text-align:right;min-width:44px;padding-left:8px;">' + pct(openTotal) + '%</span>';
-            container.appendChild(totalRow);
+            // Total row (non-clickable) — only shown when any active-severity rows are present
+            if (openTotal > 0) {
+                const totalRow = document.createElement('div');
+                totalRow.style.cssText = 'display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;'
+                    + 'padding:6px 8px;border-top:2px solid #dee2e6;border-bottom:2px solid #dee2e6;background:#f0f4ff;border-radius:4px;margin:2px 0;';
+                totalRow.innerHTML = '<span></span>'
+                    + '<span style="font-size:0.9rem;color:#333;font-weight:700;">Total</span>'
+                    + '<span style="font-size:1.3rem;font-weight:bold;color:#333;text-align:right;min-width:48px;padding-left:12px;">' + openTotal + '</span>'
+                    + '<span style="font-size:1.1rem;font-weight:600;color:#888;text-align:right;min-width:44px;padding-left:8px;">' + pct(openTotal) + '%</span>';
+                container.appendChild(totalRow);
+            }
 
-            container.appendChild(makeRow('Closed',    closedCount,    '#6c757d', 'closed'));
-            container.appendChild(makeRow('Cancelled', cancelledCount, '#6c757d', 'cancelled'));
+            // Status rows — only render those with count > 0
+            const stRows = [
+                { label: 'Closed',    count: closedCount,    color: '#6c757d', filter: 'closed'    },
+                { label: 'Cancelled', count: cancelledCount, color: '#6c757d', filter: 'cancelled' },
+            ];
+            stRows.filter(r => r.count > 0).forEach(r => container.appendChild(makeRow(r.label, r.count, r.color, r.filter)));
         }
 
         function toggleDropdown(type) {
