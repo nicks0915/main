@@ -293,13 +293,19 @@ function fetchExecutiveStatusFromSlack() {
       if (msg.type !== 'message' || msg.subtype) continue;
       var lower = (msg.text || '').toLowerCase();
       if (keywords.some(function(k) { return lower.indexOf(k) !== -1; })) {
+        var resolved = resolveSlackUserMentions(msg.text, botToken);
         return {
           success: true,
-          text: formatSlackText(resolveSlackUserMentions(msg.text, botToken)),
+          text: formatSlackText(resolved.text),
           postedAt: new Date(parseFloat(msg.ts) * 1000).toLocaleString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric',
             hour: '2-digit', minute: '2-digit'
-          })
+          }),
+          note: resolved.errors.length
+            ? '⚠️ Could not resolve ' + resolved.errors.length + ' user mention(s): '
+              + resolved.errors.join('; ')
+              + '. Check Apps Script execution logs for details.'
+            : undefined
         };
       }
     }
@@ -308,14 +314,21 @@ function fetchExecutiveStatusFromSlack() {
     for (var j = 0; j < messages.length; j++) {
       var m = messages[j];
       if (m.type === 'message' && !m.subtype && m.text) {
+        var resolvedFallback = resolveSlackUserMentions(m.text, botToken);
+        var fallbackNote = 'No exact Entertainment 5.0 keyword match — showing most recent message';
+        if (resolvedFallback.errors.length) {
+          fallbackNote += '. ⚠️ Could not resolve ' + resolvedFallback.errors.length
+            + ' user mention(s): ' + resolvedFallback.errors.join('; ')
+            + '. Check Apps Script execution logs.';
+        }
         return {
           success: true,
-          text: formatSlackText(resolveSlackUserMentions(m.text, botToken)),
+          text: formatSlackText(resolvedFallback.text),
           postedAt: new Date(parseFloat(m.ts) * 1000).toLocaleString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric',
             hour: '2-digit', minute: '2-digit'
           }),
-          note: 'No exact Entertainment 5.0 keyword match — showing most recent message'
+          note: fallbackNote
         };
       }
     }
@@ -334,11 +347,9 @@ function fetchExecutiveStatusFromSlack() {
  * If a lookup fails the bare mention is left unchanged.
  */
 function resolveSlackUserMentions(text, botToken) {
-  if (!text) return text;
+  if (!text) return { text: text, errors: [] };
 
   // Collect unique user IDs from bare <@UID> or empty-name <@UID|> mentions.
-  // Slack sometimes omits the display name entirely (sending <@UID|>) when the
-  // user's profile display name is blank — the old (?!\|) lookahead missed those.
   var seen = {};
   var re = /<@([A-Z0-9]+)(>|\|>)/g;
   var match;
@@ -347,7 +358,8 @@ function resolveSlackUserMentions(text, botToken) {
   }
 
   var uids = Object.keys(seen);
-  if (uids.length === 0) return text;
+  var errors = [];
+  if (uids.length === 0) return { text: text, errors: [] };
 
   uids.forEach(function(uid) {
     try {
@@ -356,23 +368,31 @@ function resolveSlackUserMentions(text, botToken) {
         { method: 'GET', headers: { 'Authorization': 'Bearer ' + botToken }, muteHttpExceptions: true }
       );
       var data = JSON.parse(resp.getContentText());
+      Logger.log('users.info ' + uid + ': ok=' + data.ok + ' error=' + (data.error || 'none'));
       if (data.ok && data.user) {
         var profile = data.user.profile || {};
         var name = profile.display_name
                 || profile.real_name_normalized
                 || profile.real_name
                 || data.user.name
-                || uid;
-        // Replace both <@UID> and <@UID|> with <@UID|name>
-        text = text.split('<@' + uid + '>').join('<@' + uid + '|' + name + '>');
-        text = text.split('<@' + uid + '|>').join('<@' + uid + '|' + name + '>');
+                || '';
+        Logger.log('  name resolved: "' + name + '"');
+        if (name) {
+          text = text.split('<@' + uid + '>').join('<@' + uid + '|' + name + '>');
+          text = text.split('<@' + uid + '|>').join('<@' + uid + '|' + name + '>');
+        } else {
+          errors.push(uid + ' (all name fields empty)');
+        }
+      } else {
+        errors.push(uid + ' (' + (data.error || 'API error') + ')');
       }
     } catch (e) {
-      // leave as-is; formatSlackText will render @UID as fallback
+      Logger.log('users.info exception ' + uid + ': ' + e.message);
+      errors.push(uid + ' (exception: ' + e.message + ')');
     }
   });
 
-  return text;
+  return { text: text, errors: errors };
 }
 
 /**

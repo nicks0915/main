@@ -1034,6 +1034,7 @@
                         <button id="executive-summary-btn" class="btn" style="background:#555;padding:6px 14px;font-size:14px;font-weight:600;">&#128260; Generate</button>
                     </div>
                     <div id="executive-textbox" contenteditable="true" style="background:#f8f9fa;border:2px solid #e1e5e9;border-radius:8px;padding:16px;min-height:180px;max-height:400px;overflow-y:auto;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;outline:none;"><p style="color:#999;font-style:italic;text-align:center;margin-top:40px;">Type here or click Generate to combine Defects + Work Items</p></div>
+                    <div id="executive-fetch-note" style="display:none;margin-top:6px;padding:8px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:0.82em;color:#856404;"></div>
                     <div id="executive-emoji-toolbar" style="display:flex;margin-top:10px;gap:6px;align-items:center;flex-wrap:wrap;">
                         <button onclick="toggleEditPanel('executive')" title="Edit text" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#9999;&#65039;</button>
                         <button onclick="resetPanel('executive')" title="Regenerate" style="background:none;border:1px solid #dee2e6;border-radius:6px;padding:5px 10px;font-size:16px;cursor:pointer;">&#128260;</button>
@@ -7084,15 +7085,23 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
 
             google.script.run
                 .withSuccessHandler(function(result) {
+                    var noteEl = document.getElementById('executive-fetch-note');
                     if (result.success) {
                         var header = '[Fetched from #prod-green-commerce';
                         if (result.postedAt) header += ' — posted ' + result.postedAt;
                         header += ']\n\n';
-                        if (result.note) header += '[Note: ' + result.note + ']\n\n';
-                        var fullText = header + result.text;
-                        box.innerHTML = renderSlackText(fullText);
+                        box.innerHTML = renderSlackText(header + result.text);
+                        if (noteEl) {
+                            if (result.note) {
+                                noteEl.textContent = result.note;
+                                noteEl.style.display = 'block';
+                            } else {
+                                noteEl.style.display = 'none';
+                            }
+                        }
                     } else {
                         box.textContent = 'Could not fetch from Slack: ' + result.message;
+                        if (noteEl) noteEl.style.display = 'none';
                     }
                     btn.innerHTML = originalBtnHTML;
                     btn.disabled = false;
