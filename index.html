@@ -1127,6 +1127,19 @@
     </div>
 
     <script>
+        // Shared hover tooltip for truncated Summary cells
+        (function() {
+            var tip = document.getElementById('summary-tooltip');
+            document.addEventListener('mousemove', function(e) {
+                if (!tip || tip.style.display === 'none') return;
+                var x = e.clientX + 14, y = e.clientY + 14;
+                tip.style.left = (x + tip.offsetWidth > window.innerWidth ? e.clientX - tip.offsetWidth - 8 : x) + 'px';
+                tip.style.top  = (y + tip.offsetHeight > window.innerHeight ? e.clientY - tip.offsetHeight - 8 : y) + 'px';
+            });
+            window.showSummaryTooltip = function(text) { if (tip) { tip.textContent = text; tip.style.display = 'block'; } };
+            window.hideSummaryTooltip = function()     { if (tip) tip.style.display = 'none'; };
+        })();
+
         // ===== EPICS TAB FUNCTIONALITY =====
 
         // Global variables for EPICs data
@@ -2015,6 +2028,9 @@ function updateEpicsTable() {
         summaryCell.style.overflow = 'hidden';
         summaryCell.style.textOverflow = 'ellipsis';
         summaryCell.style.whiteSpace = 'nowrap';
+        summaryCell.style.cursor = 'default';
+        summaryCell.addEventListener('mouseenter', function() { showSummaryTooltip(summaryCell.textContent); });
+        summaryCell.addEventListener('mouseleave', hideSummaryTooltip);
 
         // Health
         const healthCell = row.insertCell();
@@ -3077,6 +3093,9 @@ function updateEpicsMetrics() {
                 summaryCell.style.overflow = 'hidden';
                 summaryCell.style.textOverflow = 'ellipsis';
                 summaryCell.style.whiteSpace = 'nowrap';
+                summaryCell.style.cursor = 'default';
+                summaryCell.addEventListener('mouseenter', function() { showSummaryTooltip(summaryCell.textContent); });
+                summaryCell.addEventListener('mouseleave', hideSummaryTooltip);
                 row.insertCell().textContent = (record.teamsAll && record.teamsAll.length > 0)
                     ? record.teamsAll.join(', ')
                     : (record.applicationNormalized || '');
@@ -4709,6 +4728,9 @@ function clearSearch() {
                 summaryCell.style.overflow = 'hidden';
                 summaryCell.style.textOverflow = 'ellipsis';
                 summaryCell.style.whiteSpace = 'nowrap';
+                summaryCell.style.cursor = 'default';
+                summaryCell.addEventListener('mouseenter', function() { showSummaryTooltip(summaryCell.textContent); });
+                summaryCell.addEventListener('mouseleave', hideSummaryTooltip);
 
                 // Priority (between Summary and Severity)
                 const priorityCell = row.insertCell();
@@ -7978,5 +8000,6 @@ Total Filtered Items: ${assessmentsFilteredData.length} of ${assessmentsData.len
         });
 
     </script>
+<div id="summary-tooltip" style="display:none;position:fixed;z-index:9999;max-width:420px;padding:8px 12px;background:#1e2432;color:#f0f0f0;font-size:0.85rem;line-height:1.45;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.25);pointer-events:none;word-wrap:break-word;"></div>
 </body>
 </html>
