@@ -3093,6 +3093,32 @@ function updateEpicsMetrics() {
             });
         }
 
+        function updateAssessmentsSortIndicators() {
+            const columns = [
+                { id: 'assessments-issue-type', col: 'issueType' },
+                { id: 'assessments-key', col: 'key' },
+                { id: 'assessments-summary', col: 'summary' },
+                { id: 'assessments-health', col: 'health' },
+                { id: 'assessments-application', col: 'application' },
+                { id: 'assessments-gate2-cost', col: 'gate2Cost' },
+                { id: 'assessments-status', col: 'status' },
+                { id: 'assessments-due-date', col: 'dueDate' },
+                { id: 'assessments-assignee', col: 'assignee' },
+                { id: 'assessments-labels', col: 'labels' }
+            ];
+            columns.forEach(({ id, col }) => {
+                const indicator = document.getElementById(id + '-sort-indicator');
+                if (indicator) {
+                    indicator.classList.remove('active');
+                    indicator.textContent = '⇅';
+                    if (assessmentsSortConfig.column === col) {
+                        indicator.classList.add('active');
+                        indicator.textContent = assessmentsSortConfig.direction === 'asc' ? '▲' : '▼';
+                    }
+                }
+            });
+        }
+
         function applyAssessmentsSorting() {
             if (!assessmentsSortConfig.column) return;
             assessmentsFilteredData.sort((a, b) => {
