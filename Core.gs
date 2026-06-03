@@ -49,7 +49,9 @@ const CONFIG = {
       { id: 'C09KTBN4AA1', name: 'TestNotification' },
       { id: 'C03UMGV7DDE', name: 'Prod_Green_Commerce' }
       // Example: { id: 'CXXXXXXXXX', name: 'My New Channel' }
-    ]
+    ],
+    // Keyword used to find the executive status message in the Slack channel (case-insensitive)
+    executiveStatusKeyword: 'entertainment 5.0 program'
     // Bot Token is stored in Script Properties as 'SLACK_BOT_TOKEN'
   },
 

@@ -285,14 +285,14 @@ function fetchExecutiveStatusFromSlack() {
     }
 
     var messages = data.messages || [];
-    var keywords = ['entertainment 5.0', 'optik tv on green', 'entertainment on green', 'optik tv'];
+    var keyword = (CONFIG.SLACK.executiveStatusKeyword || 'entertainment 5.0 program').toLowerCase();
 
-    // Find most recent human message matching any keyword
+    // Find most recent human message matching the keyword
     for (var i = 0; i < messages.length; i++) {
       var msg = messages[i];
       if (msg.type !== 'message' || msg.subtype) continue;
       var lower = (msg.text || '').toLowerCase();
-      if (keywords.some(function(k) { return lower.indexOf(k) !== -1; })) {
+      if (lower.indexOf(keyword) !== -1) {
         var resolved = resolveSlackUserMentions(msg.text, botToken);
         return {
           success: true,
@@ -315,7 +315,7 @@ function fetchExecutiveStatusFromSlack() {
       var m = messages[j];
       if (m.type === 'message' && !m.subtype && m.text) {
         var resolvedFallback = resolveSlackUserMentions(m.text, botToken);
-        var fallbackNote = 'No exact Entertainment 5.0 keyword match — showing most recent message';
+        var fallbackNote = 'No "' + keyword + '" keyword match — showing most recent message';
         if (resolvedFallback.errors.length) {
           fallbackNote += '. ⚠️ Could not resolve ' + resolvedFallback.errors.length
             + ' user mention(s): ' + resolvedFallback.errors.join('; ')
